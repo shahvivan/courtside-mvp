@@ -1,17 +1,25 @@
-# Courtside pilot architecture
+# CourtSide unified architecture
 
-Scope: organiser led Barcelona sports events with distinct player registrations and spectator interest. Working name Courtside is an implementation choice, not a user-approved brand. Latest September 20 organiser-led vault decision takes precedence over older newcomer-first text.
+## Product
 
-Visual thesis: warm paper, deep pine and acid lime; bold editorial typography with an airy, practical event workspace.
-Content: event discovery, event detail and Play/Watch actions, organiser workspace and event composer.
-Interaction: short entrance fade, responsive filter changes, clear modal and RSVP state transitions; respect reduced motion.
+One React/Vinext app: Discover → event details → named Play/Watch RSVP → My RSVPs. Organise manages drafts, publication, rosters and paid/unpaid notes. Evidence review links to a separate classroom fixture with a return link.
 
-Vinext/React application with Cloudflare D1 SQLite durable records. Same-origin JSON API. Anonymous random HttpOnly session capability owns drafts and registrations; this is a private testing identity, not a verified user account. Losing cookies loses management access. No real contact details required or collected. No public deployment without the user's explicit approval per standing instructions.
+Visual thesis: calm warm surfaces, clear typography and CourtSide green. Content plan: navigation, workspace, filters/list, event detail, owner tools. Interaction thesis: short list entrance, visible row focus/hover and explicit pending/success states, respecting reduced motion.
 
-Events: draft/published/cancelled, title, sport, venue, date with explicit offset (Europe/Madrid), description, player capacity and spectator access. Registrations: one per browser per event and role, separate play/watch states. Atomic SQL insert determines player waitlist; cancellation automatically promotes earliest waiting player. Spectators express interest, never a reserved seat. No invented historical traction.
+## State and authority
 
-Writing helper: live local Ollama qwen2.5:3b produces an editable description from title, sport, venue and notes. It is a fixed loopback call, with bounded input, timeout, schema output, plain text validation and no tools. Human explicitly accepts a suggestion, saves a draft and publishes separately. Deterministic templates remain available as a clearly labelled fallback. No attendee identity is sent to the model. AI can still make unsupported claims; human review is required. Structured event fields are authoritative. A hosted version needs a separate configured model provider; it cannot reach this laptop's Ollama.
+JSON API and local D1 SQLite persist events and registrations. Atomic SQL controls capacity and FIFO promotion. Additive participant metadata records first names and manual paid flags against RSVP IDs. Owner checks are server-side, not an organiser toggle. Other sessions get aggregate event counts and their own status, not roster names or cookie capability IDs. Payment updates are restricted to active confirmed players.
 
-Out of scope: payments, verified identities, venue bookings, permits, automatic outreach, real event imports, chat, predictive demand, self-improvement, commercial launch. Five organiser interviews remain required to validate the problem.
+Paid flags describe the current registration. Cancellation clears them; rejoin uses a fresh registration and unpaid flag. No refund is triggered and no financial ledger is provided. External payment history must stay with the organiser.
 
-Verification: independent read-only reviewer, HTTP behaviour and adversarial checks, TypeScript and production build; bounded repair loop max three review cycles, document unresolved issues.
+Identity is an anonymous HttpOnly SameSite capability cookie, not a verified account. Clearing it loses access. D1 state under `.wrangler/pilot-state` is ignored by Git. Different laptops have separate local databases. GitHub shares code, not running data.
+
+The fixture under `public/review/` keeps its deterministic engine and browser localStorage. It never reads/mutates D1, sends messages or moves money. Its synthetic banner, boundary notice and return link distinguish it from the live pilot roster.
+
+## AI and release boundaries
+
+Optional local Ollama drafts descriptions from event facts, excluding attendee names. Users review/apply, save and publish separately. A labelled template works without the model. AI has no publication, messaging or money authority.
+
+No model training, customer validation, payments, public hosting or real authentication is added. Existing handouts and their timing claims are not changed. Integration incorporates the signup ideas into the original app rather than running two disconnected signup systems.
+
+Verify lint, types, build, fixture regressions, multi-session API behaviour, privacy/ownership, waitlist concurrency and browser navigation. Independent review gates source publication; at most three substantive fix/review rounds before escalating. A shared hosted version requires separate approval, authentication, rate limiting, privacy/security work and dependency review.

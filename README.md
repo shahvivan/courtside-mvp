@@ -1,50 +1,73 @@
-# Courtside
+# CourtSide
 
-An organiser led sports MVP for Vivan and Maximilian's AI Native Ventures project. Working name only. The venture's current scope is defined by the September 20 organiser-led decision in the vault.
+One project for Vivan and Maximilian: discover a game, join to play or watch, manage confirmations and track whether players have paid the organiser. CourtSide does not collect or move money.
 
-## Open it
+## Start here
 
-On this laptop: http://localhost:3000
+Requires Node.js 22.13 or newer and npm. No paid API key or cloud account is needed locally.
 
-If stopped, double click `Start Courtside.command`. Source lives in `/Users/jignesh/Documents/ventures/courtside-mvp`.
+```sh
+git clone https://github.com/shahvivan/courtside-mvp.git
+cd courtside-mvp
+npm ci
+npm run dev
+```
 
-## Five minute demo
+Open **http://localhost:3000**. After installing dependencies, macOS users can also double-click `Start Courtside.command`. Keep the terminal running. If port 3000 is occupied, run `npm run dev -- --port 3001` and open http://localhost:3001.
 
-1. Load sample events. All are fictional and have no real bookings.
-2. Open Sunday sand social. Join to play, then register interest in watching. Observe separate counts.
-3. Open Organise, create an event, and enter its title, sport, place, future time and player capacity.
-4. Try Suggest event description. A real local model writes a suggestion. Check it, edit it and choose Use reviewed suggestion. The instant template helper is separate.
-5. Save the draft. Edit it if needed, then Publish reviewed draft. It appears under Discover.
-6. Open a second browser profile or private window at the same local URL to test a different participant. Set capacity to one before publishing to test the waitlist.
-7. Cancel a player RSVP; the earliest waiting player gets that place. Spectator interest does not affect player capacity.
-8. Use Prepare invitation to copy a draft, or Export pilot data to download your event records. Nothing is sent automatically.
+## Find your way around
 
-## What is real
+| Area | What to do |
+| --- | --- |
+| Discover | Load fictional sample events, find a game, enter a first name, join to play or watch. |
+| My RSVPs | Check your place or waitlist position. Use “I can't make it” to cancel; the earliest waiting player moves up automatically. |
+| Organise | Create, edit and publish reviewed event drafts. Open your event to see its roster and mark confirmed players paid or unpaid. |
+| Evidence review | Inspect the separate Session 4/5 synthetic fixture, record reasons, export review history, then return to games. |
 
-Durable local D1 database, API enforced ownership, drafts and publishing, Play and Watch flows, concurrency-safe capacity, waitlist, cancellation, filtering, data export and local AI inference. Records survive refresh and server restart. Authentication is an anonymous browser capability cookie, not verified identity. Clearing that cookie loses management access. No real contact data is requested.
+Paid flags are organiser-entered notes about the current registration, not bank receipts or an accounting ledger. Cancellation clears the flag; rejoining starts unpaid and requires the organiser to recheck any prior payment. No money is refunded or moved by these actions. Keep external payment records separately.
 
-## Deliberate limits
+## Two-person demo
 
-This is a local pilot, not a publicly launched marketplace. No payments, email, verified identities, booked venues, permits or attendance verification. Sample signups are not traction. Localhost links only work on this laptop; a public pilot needs deployment, real authentication, rate limits, hosted model configuration and a privacy review. The standing no-deployment preference has been respected.
+1. Create and publish a fictional event with one player place.
+2. In another browser profile/private window at the same address, enter a fictional first name and join to play.
+3. Use a third browser session to join the waitlist. Cancel the first player's place; refresh the waiting browser to confirm promotion.
+4. In the organiser's browser, mark the confirmed player paid. Refresh the participant view to see the updated note.
+5. Open Evidence review. Its fictional payments and local review notes do not change the event database.
 
-All generated descriptions require fact checking. The model can hallucinate despite its instructions. It cannot publish, message people or modify event fields. Requests time out after 45 seconds; the instant template remains available. Model is already installed locally and no paid API key is used. Only user-entered event facts go to the local model.
+## Working together
 
-Five real organiser interviews remain necessary. This build does not validate the problem, willingness to pay, spectator demand or a defensible advantage. See `SCOPE.md`, `AI_ORCHESTRATION_LOG.md`, `architecturedoc.md` and `verification/`.
+GitHub is the shared source of truth. Pull before starting, use a feature branch and open a pull request so your partner can review changes. Do not force-push or commit environment files, database state or dependencies.
 
-## Development
+```sh
+git pull --ff-only
+git switch -c feature/your-change
+```
 
-Node 22.13 or newer, npm. `npm ci`, `npm run dev -- --host 127.0.0.1`. Checks: `npm run lint`, `npx tsc --noEmit`, `npm run build`, `npm audit --omit=dev`. DB schema: `db/schema.ts`, migrations: `drizzle/`. Local runtime also initializes tables with prepared statements. Final pilot state uses `.wrangler/pilot-state`; prior verifier state is preserved in `.wrangler/state`.
+GitHub shares **code, not running event data**. Each laptop's local database is separate. A localhost invitation works only on the laptop running it. A shared hosted app requires separate approval and a security/authentication upgrade. This repository update is not a deployment; the dev server listens only on loopback.
 
-Local AI: existing Ollama service on 127.0.0.1:11434 with qwen2.5:3b. Do not expose this development server or Ollama directly to the internet.
+## What was combined
 
-Security residual: production dependency audit reports zero findings, but the full toolchain has 14 advisories, including server/build tooling. See `verification/final-checks.md`. Resolve these and retest before deploying. Browser interactions and visual/mobile QA have not been executed; the independent reviewer verified the API and inspected UI source.
+The original React/Vinext event app remains the entry point. Later standalone signup ideas now use its database-backed flows: names, cancellation, FIFO waitlist promotion and owner-only paid/unpaid notes. The original Session 4/5 evidence tool remains at `/review/index.html`, explicitly separate from the event roster. Classroom handouts were not changed.
 
-## Research used
+## Data and limits
 
-* [Ollama chat API](https://docs.ollama.com/api/chat) and [structured output](https://docs.ollama.com/capabilities/structured-outputs)
-* [Eventbrite waitlist operations](https://www.eventbrite.com/help/en-us/articles/817355/)
-* [W3C forms](https://www.w3.org/WAI/tutorials/forms/)
-* [NIST generative AI risk profile](https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=958388)
-* [EDPB security guidance](https://www.edpb.europa.eu/sme/be-compliant/secure-personal-data_en)
+Records persist in local D1 SQLite under `.wrangler/pilot-state`. An anonymous HttpOnly cookie controls access, not a verified account. Clearing cookies loses management access. Use fictional first names and sample data. No venue reservations, attendance verification, customer validation or verified payment evidence are claimed.
 
-These informed implementation, not evidence of customer demand.
+Evidence-review notes use browser localStorage, not D1 or a production audit trail. They do not synchronise across devices.
+
+AI description assistance is optional: local Ollama with `qwen2.5:3b`. If unavailable, the labelled template/manual editing still works. Review all AI wording. AI cannot publish, contact people or handle money; only event draft facts, not attendee names, go to the model.
+
+This is a local prototype, not production-ready software. Do not expose the dev server or Ollama to the internet. Prior toolchain advisories and anonymous identity require review before deployment. See `verification/unified-integration.md` for current checks and limits.
+
+## Checks and structure
+
+```sh
+npm run lint
+npx tsc --noEmit
+npm run build
+node public/review/test.cjs
+# With a local server running; creates fictional test events:
+node verification/integration-api.mjs http://127.0.0.1:3000
+```
+
+`app/`: UI and API. `lib/`: data helpers/types. `db/` and `drizzle/`: schema. `public/review/`: evidence fixture. See `architecturedoc.md`, `SCOPE.md`, and `verification/`. September verification files are historical, not a claim about this integration.

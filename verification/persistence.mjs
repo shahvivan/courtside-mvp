@@ -11,8 +11,8 @@ if(process.argv[2]==='prepare'){
  const data={title:'Persistence check sample',sport:'Beach volleyball',venue:'Fictional test venue',starts:new Date(Date.now()+86400000).toISOString(),capacity:1,description:'Fictional verification sample, no real event.',access:'Interest only, no seat reservation.'};
  const created=await req('/api/events','POST',data,first.cookie);
  await req('/api/events','PATCH',{id:created.json.id,action:'publish'},first.cookie);
- await req('/api/rsvp','POST',{event:created.json.id,role:'play',action:'join'},first.cookie);
- await req('/api/rsvp','POST',{event:created.json.id,role:'watch',action:'join'},first.cookie);
+ await req('/api/rsvp','POST',{event:created.json.id,role:'play',action:'join',name:'Test'},first.cookie);
+ await req('/api/rsvp','POST',{event:created.json.id,role:'watch',action:'join',name:'Test'},first.cookie);
  await writeFile(state,JSON.stringify({cookie:first.cookie,id:created.json.id}),{mode:0o600});
  console.log('PREPARED: fresh database, event, player and spectator records saved.');
 }else{

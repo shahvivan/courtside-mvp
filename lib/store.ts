@@ -12,6 +12,9 @@ export async function database() {
     db.prepare(
       `CREATE INDEX IF NOT EXISTS idx_rsvp_event_role_state ON rsvps(event,role,state)`,
     ),
+    db.prepare(
+      `CREATE TABLE IF NOT EXISTS participant_metadata (rsvp INTEGER PRIMARY KEY, name TEXT NOT NULL, paid INTEGER NOT NULL DEFAULT 0 CHECK(paid IN (0,1)))`,
+    ),
   ]);
   return db;
 }
@@ -40,6 +43,13 @@ export function response(
 export function validOrigin(req: Request) {
   const origin = req.headers.get("origin");
   return origin === new URL(req.url).origin;
+}
+export function participantName(value: unknown): string {
+  if (typeof value !== "string") throw new Error("Please enter your first name.");
+  const name = value.trim().replace(/\s+/gu, " ");
+  if (!name || name.length > 60 || !/^[\p{L}\p{M} .’'\-]+$/u.test(name) || !/\p{L}/u.test(name))
+    throw new Error("Enter a first name using 1–60 characters.");
+  return name;
 }
 export const sports = [
   "Beach volleyball",

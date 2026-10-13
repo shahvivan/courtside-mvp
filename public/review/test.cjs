@@ -1,0 +1,32 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- Node-only CommonJS regression runner. */
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const context={};vm.createContext(context);vm.runInContext(fs.readFileSync(__dirname+'/engine.js','utf8'),context);
+const {fixture,reconcile,recordReview}=context.CourtSide,clone=x=>JSON.parse(JSON.stringify(x));
+let count=0;function check(name,test){test();console.log('PASS '+name);count++;}
+const result=clone(reconcile(fixture));
+check('Exact Session3 allocation',()=>{assert.deepEqual(result.rows.filter(r=>r.status==='Confirmed').map(r=>r.name),['Ari','Cam','Hank']);assert.deepEqual(result.rows.filter(r=>r.status==='Waitlist').map(r=>r.name),['Ivy']);});
+check('Eight unique transactions and EUR45 gross',()=>assert.deepEqual(result.totals,{confirmed:3,waitlist:1,spectators:1,uniqueTransactions:8,grossCents:4500}));
+check('No invented guest Dee',()=>assert(!result.rows.some(r=>r.name==='Dee')));
+check('Prompt injection remains unpaid data',()=>assert.equal(result.rows.find(r=>r.name==='Ben').status,'Pending payment'));
+check('Alias not silently matched',()=>assert.equal(result.rows.find(r=>r.name==='Rob').status,'Pending payment'));
+check('Cancellation overrides earlier payment',()=>assert.equal(result.rows.find(r=>r.name==='Jae').status,'Cancelled'));
+check('Spectator does not consume capacity',()=>assert.equal(result.rows.find(r=>r.name==='Eli').status,'Spectator'));
+check('Late payment excluded',()=>assert.equal(result.rows.find(r=>r.name==='Fay').status,'Late payment'));
+check('Four exact payment exceptions',()=>assert.deepEqual(result.exceptions.map(e=>e.id),['t3','t5','t7','t8']));
+check('All source links resolve',()=>{const ids=new Set([...fixture.messages,...fixture.payments].map(x=>x.id));for(const r of result.rows)for(const id of [...r.sourceIds,...r.paymentIds])assert(ids.has(id));for(const e of result.exceptions)for(const id of e.sourceIds)assert(ids.has(id));});
+check('Duplicate row does not add money',()=>{const f=clone(fixture);f.payments.push({...f.payments[0],id:'p10'});assert.equal(reconcile(f).totals.grossCents,4500);});
+check('Conflicting duplicate fails closed',()=>{const f=clone(fixture);f.payments.push({...f.payments[0],id:'p10',cents:900});assert.throws(()=>reconcile(f),/Conflicting/);});
+check('Failed payment cannot qualify or add gross',()=>{const f=clone(fixture);f.payments[0].state='failed';const r=reconcile(f);assert.equal(r.totals.grossCents,4000);assert.equal(r.rows.find(p=>p.name==='Ari').status,'Pending payment');});
+check('Capacity is enforced',()=>{const f=clone(fixture);f.capacity=1;const r=reconcile(f);assert.equal(r.totals.confirmed,1);assert.equal(r.totals.waitlist,3);});
+check('Zero capacity waits all eligible',()=>{const f=clone(fixture);f.capacity=0;assert.equal(reconcile(f).totals.confirmed,0);});
+check('Exact cutoff payment qualifies',()=>{const f=clone(fixture);f.payments[8].time='18:00';assert.equal(reconcile(f).rows.find(p=>p.name==='Fay').status,'Confirmed');});
+check('Review needs meaningful reason',()=>assert.throws(()=>recordReview([],{exceptionId:'t3',decision:'Keep unresolved',reason:'x'}),/reason/));
+check('Unknown exception rejected',()=>assert.throws(()=>recordReview([],{exceptionId:'x',decision:'Keep unresolved',reason:'Check evidence'}),/Unknown/));
+check('Unsupported decision rejected',()=>assert.throws(()=>recordReview([],{exceptionId:'t3',decision:'Refund automatically',reason:'Check evidence'}),/decision/));
+check('History append preserves old decision',()=>{const first=recordReview([],{exceptionId:'t3',decision:'Keep unresolved',reason:'Review spectator payment.'},'2026-10-13T00:00:00Z');const second=recordReview(first,{exceptionId:'t3',decision:'Organiser follow-up required',reason:'Ask organiser to check policy.'},'2026-10-13T00:01:00Z');assert.equal(first.length,1);assert.equal(second.length,2);assert.equal(second[0].fixtureId,fixture.id);});
+check('Recording cannot mutate roster',()=>{const before=JSON.stringify(reconcile(fixture));recordReview([],{exceptionId:'t5',decision:'Checked source, no action needed',reason:'Fixture-only test action.'});assert.equal(JSON.stringify(reconcile(fixture)),before);});
+check('Unsafe HTML is held as text data',()=>{const h=recordReview([],{exceptionId:'t3',decision:'Keep unresolved',reason:'<img src=x onerror=alert(1)>'});assert.equal(h[0].reason,'<img src=x onerror=alert(1)>');const source=fs.readFileSync(__dirname+'/app.js','utf8');assert(!source.includes('innerHTML'));assert(source.includes('textContent'));});
+check('No executable outbound integrations',()=>{const source=['app.js','engine.js'].map(p=>fs.readFileSync(__dirname+'/'+p,'utf8')).join('');assert(!/\b(fetch|XMLHttpRequest|WebSocket)\s*\(/.test(source));assert(fs.readFileSync(__dirname+'/index.html','utf8').includes("connect-src 'none'"));});
+check('History limit blocks save before data would become unreadable',()=>{assert.throws(()=>recordReview(Array(1000).fill({}),{exceptionId:'t3',decision:'Keep unresolved',reason:'Check source before deciding.'}),/History limit/);});
+check('Malformed timestamp rejected instead of string compared',()=>{const f=clone(fixture);f.payments[0].time='9:99';assert.throws(()=>reconcile(f),/timestamp/);});
+console.log(`${count} deterministic checks passed.`);

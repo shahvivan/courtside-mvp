@@ -15,6 +15,13 @@
       "when": 1789926459194,
       "tag": "0001_sparkling_ulik",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791878142497,
+      "tag": "0002_motionless_spitfire",
+      "breakpoints": true
     }
   ]
 }

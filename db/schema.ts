@@ -34,3 +34,11 @@ export const rsvps = sqliteTable(
     index("idx_rsvp_event_role_state").on(table.event, table.role, table.state),
   ],
 );
+
+// One metadata row per registration. A cancelled player rejoins under a new
+// registration id, so payment flags cannot carry across registrations.
+export const participantMetadata = sqliteTable("participant_metadata", {
+  rsvp: integer("rsvp").primaryKey(),
+  name: text("name").notNull(),
+  paid: integer("paid").notNull().default(0),
+});

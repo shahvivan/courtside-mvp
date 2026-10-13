@@ -16,12 +16,15 @@ export async function GET(req: Request) {
  (SELECT COUNT(*) FROM rsvps WHERE event=e.id AND role='play' AND state='waitlisted') AS waiting,
  (SELECT COUNT(*) FROM rsvps WHERE event=e.id AND role='watch' AND state='confirmed') AS spectators,
  (SELECT state FROM rsvps WHERE event=e.id AND session=? AND role='play') AS myPlay,
- (SELECT state FROM rsvps WHERE event=e.id AND session=? AND role='watch') AS myWatch
+ (SELECT state FROM rsvps WHERE event=e.id AND session=? AND role='watch') AS myWatch,
+ (SELECT COALESCE(m.paid,0) FROM rsvps r LEFT JOIN participant_metadata m ON m.rsvp=r.id WHERE r.event=e.id AND r.session=? AND r.role='play' AND r.state='confirmed') AS myPaid,
+ (SELECT m.name FROM participant_metadata m JOIN rsvps r ON r.id=m.rsvp WHERE r.event=e.id AND r.session=? AND r.state IN ('confirmed','waitlisted') ORDER BY CASE r.role WHEN 'play' THEN 0 ELSE 1 END LIMIT 1) AS myName,
+ (SELECT COUNT(*) FROM rsvps q WHERE q.event=e.id AND q.role='play' AND q.state='waitlisted' AND q.id<=(SELECT id FROM rsvps WHERE event=e.id AND session=? AND role='play' AND state='waitlisted')) AS myWaitPosition
  FROM events e WHERE e.status='published' OR e.owner=? OR (e.status='cancelled' AND EXISTS(SELECT 1 FROM rsvps WHERE event=e.id AND session=?)) ORDER BY e.starts`,
     )
-    .bind(sid, sid, sid, sid, sid)
+    .bind(sid, sid, sid, sid, sid, sid, sid, sid)
     .all();
-  return response(req, sid, { events: rows.results });
+  return response(req, sid, { events: rows.results.map(row => ({ ...row, myPaid: row.myPaid == null ? null : Boolean(row.myPaid), myWaitPosition: row.myWaitPosition || null })) });
 }
 export async function POST(req: Request) {
   const sid = session(req);

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import type { SportEvent } from "../lib/types";
+import type { Participant, SportEvent } from "../lib/types";
 
 const sports = ["Beach volleyball", "Padel", "Basketball", "Beach tennis"];
 const date = (s: string) =>
@@ -41,6 +41,9 @@ export default function Home() {
   const [aiDraft, setAiDraft] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
   const [now, setNow] = useState(0);
+  const [name, setName] = useState("");
+  const [roster, setRoster] = useState<{ event: string; participants: Participant[] } | null>(null);
+  const [rosterError, setRosterError] = useState("");
   async function assist() {
     setBusy(true);
     setError("");
@@ -73,6 +76,19 @@ export default function Home() {
     setEvents(data.events);
     setLoaded(true);
   }
+  async function reload() {
+    setBusy(true);
+    setError("");
+    try {
+      await refresh();
+      setNow(Date.now());
+      setNotice("Latest RSVP, waitlist and payment statuses loaded.");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Could not refresh events.");
+    } finally {
+      setBusy(false);
+    }
+  }
   useEffect(() => {
     let active = true;
     fetch("/api/events")
@@ -101,6 +117,24 @@ export default function Home() {
     if (compose || selected) dialog.current?.showModal();
     else dialog.current?.close();
   }, [compose, selected]);
+  useEffect(() => {
+    const event = events.find((item) => item.id === selected);
+    if (!event?.mine) return;
+    let active = true;
+    fetch(`/api/participants?event=${encodeURIComponent(event.id)}`)
+      .then(async (response) => {
+        const result = await response.json() as { participants: Participant[]; error?: string };
+        if (!response.ok) throw new Error(result.error || "Could not load the roster.");
+        if (active) {
+          setRoster({ event: event.id, participants: result.participants });
+          setRosterError("");
+        }
+      })
+      .catch((error) => {
+        if (active) setRosterError(error instanceof Error ? error.message : "Could not load the roster.");
+      });
+    return () => { active = false; };
+  }, [selected, events]);
   async function action(url: string, data: unknown, method = "POST") {
     setBusy(true);
     setError("");
@@ -132,17 +166,24 @@ export default function Home() {
     setError("");
     setAiDraft("");
     setEditing(null);
+    setRoster(null);
+    setRosterError("");
   }
   async function rsvp(e: SportEvent, role: string, cancel = false) {
+    if (!cancel && !name.trim()) {
+      setError("Enter your first name before joining.");
+      return;
+    }
     const result = await action("/api/rsvp", {
       event: e.id,
       role,
+      name: name.trim(),
       action: cancel ? "cancel" : "join",
     });
     if (result)
       setNotice(
         cancel
-          ? "Your RSVP has been cancelled."
+          ? "Your RSVP is cancelled. If you held a player place, the first waiting player moves up automatically."
           : result.state === "waitlisted"
             ? "You are on the player waitlist. A place is not confirmed yet."
             : role === "watch"
@@ -232,10 +273,10 @@ export default function Home() {
   );
   const title =
     view === "organise"
-      ? "Your organiser workspace"
+      ? "Your events"
       : view === "mine"
-        ? "Your next sidelines & sessions"
-        : "On around Barcelona";
+        ? "My RSVPs"
+        : "Find a game";
   return (
     <main>
       <header>
@@ -250,12 +291,19 @@ export default function Home() {
           ].map(([key, label]) => (
             <button
               className={view === key ? "nav active" : "nav"}
+              aria-current={view === key ? "page" : undefined}
               key={key}
-              onClick={() => setView(key)}
+              onClick={() => {
+                setView(key);
+                setSport("All sports");
+                setSearch("");
+                setDay("");
+              }}
             >
               {label}
             </button>
           ))}
+          <a className="nav review-link" href="/review/index.html">Evidence review ↗</a>
         </nav>
         <button
           onClick={() => {
@@ -270,56 +318,34 @@ export default function Home() {
       <div className="pilot-bar">
         PRIVATE PILOT{" "}
         <span>
-          Sample events. No real bookings or payments. Saved on this app’s
-          database.
+          Saved to the app database. No venue bookings or money transfers.
         </span>
       </div>
-      {view === "discover" && (
-        <section className="intro">
-          <div>
-            <p className="eyebrow">BARCELONA, OUTSIDE TOGETHER.</p>
-            <h1>
-              Bring the game.
-              <br />
-              <em>Find your people.</em>
-            </h1>
-            <p>
-              Local sport needs more than players. Discover a game, join the
-              action, or bring the crowd.
-            </p>
-            <a className="button" href="#events">
-              Find your next game ↓
-            </a>
-          </div>
-          <div className="court-visual" aria-hidden="true">
-            <div className="court-lines"></div>
-            <div className="ball"></div>
-            <span>
-              PLAY.
-              <br />
-              WATCH.
-              <br />
-              BELONG.
-            </span>
-            <small>41.38° N · 2.17° E</small>
-          </div>
-        </section>
-      )}
       <section id="events">
         <div className="section-heading">
           <div>
             <p className="eyebrow">
               {view === "organise"
-                ? "MAKE YOUR NEXT EVENT HAPPEN."
-                : "PLAY IT. WATCH IT. BE PART OF IT."}
+                ? "ORGANISER WORKSPACE"
+                : view === "mine" ? "YOUR PLACES AND WAITLISTS" : "BARCELONA SPORTS"}
             </p>
-            <h2>{title}</h2>
+            <h1 className="workspace-title">{title}</h1>
+            <p className="workspace-summary">
+              {view === "organise"
+                ? "Create a game, manage its roster and record payments made directly to you."
+                : view === "mine"
+                  ? "Check your place, view payment status or let the organiser know you cannot make it."
+                  : "Choose a game to play or watch. Full games use a first-in, first-out player waitlist."}
+            </p>
           </div>
+          <div className="workspace-actions">
+            <button className="secondary" disabled={busy} onClick={reload}>Refresh status</button>
           {view === "organise" && (
             <button className="secondary" onClick={exportEvents}>
               Export pilot data ↗
             </button>
           )}
+          </div>
         </div>
         {view === "organise" && (
           <p className="notice">
@@ -380,9 +406,7 @@ export default function Home() {
           <div className="empty">
             <span className="empty-mark">↗</span>
             <h3>
-              {events.length === 0
-                ? "Every good game starts with someone."
-                : "No games here yet."}
+              {events.length === 0 ? "Create your first game" : "No matching games"}
             </h3>
             <p>
               {events.length === 0
@@ -410,50 +434,10 @@ export default function Home() {
           <div className="event-grid">
             {filtered.map((e, i) => (
               <article key={e.id} style={{ animationDelay: `${i * 45}ms` }}>
-                <button
-                  className={`event-art art-${sports.indexOf(e.sport)}`}
-                  onClick={() => {
-                    setSelected(e.id);
-                    setError("");
-                    setNotice("");
-                  }}
-                  aria-label={`View ${e.title}`}
-                >
-                  <span className="tag">SAMPLE EVENT</span>
-                  <strong>
-                    {e.sport === "Beach volleyball" ? (
-                      <>
-                        SAND.
-                        <br />
-                        SERVE.
-                        <br />
-                        REPEAT.
-                      </>
-                    ) : e.sport === "Padel" ? (
-                      <>
-                        NEW PARTNERS.
-                        <br />
-                        GOOD RALLIES.
-                      </>
-                    ) : e.sport === "Basketball" ? (
-                      <>
-                        MORE THAN
-                        <br />A PICKUP.
-                      </>
-                    ) : (
-                      <>
-                        MEET YOU
-                        <br />
-                        BY THE SEA.
-                      </>
-                    )}
-                  </strong>
-                  <span className="art-arrow">↗</span>
-                </button>
                 <div className="event-meta">
                   {e.sport.toUpperCase()}{" "}
                   <span>
-                    {e.status === "published" ? "OPEN" : e.status.toUpperCase()}
+                    {e.demo ? "SAMPLE · " : ""}{e.status === "published" ? "OPEN" : e.status.toUpperCase()}
                   </span>
                 </div>
                 <h3>
@@ -483,29 +467,19 @@ export default function Home() {
                   />
                 </div>
                 {e.waiting > 0 && <p>{e.waiting} on the player waitlist</p>}
+                {e.myPlay === "confirmed" && <p className="rsvp-state">Your player place is confirmed</p>}
+                {e.myPlay === "waitlisted" && <p className="rsvp-state">Your waitlist position: {e.myWaitPosition ?? "pending"}</p>}
+                {e.myWatch === "confirmed" && <p className="notice">Your spectator interest is saved</p>}
                 <button
                   className="text-button"
                   onClick={() => setSelected(e.id)}
                 >
-                  {view === "organise" ? "Manage event" : "View game & join"} ↗
+                  {view === "organise" ? "Manage event" : view === "mine" ? "View my RSVP" : "View game & join"} ↗
                 </button>
               </article>
             ))}
           </div>
         )}
-      </section>
-      <section className="organiser-banner">
-        <p className="eyebrow">FOR THE PEOPLE WHO MAKE IT HAPPEN</p>
-        <h2>
-          Fill the court.
-          <br />
-          <em>Bring the sidelines to life.</em>
-        </h2>
-        <p>
-          One event page. Two ways to take part. A clearer picture of who is
-          coming.
-        </p>
-        <button onClick={() => setCompose(true)}>Start with an event ↗</button>
       </section>
       <footer>
         <Link className="brand" href="/">
@@ -513,12 +487,13 @@ export default function Home() {
         </Link>
         <p>Barcelona sports pilot · Built to test an idea, together.</p>
         <p>
-          No verified identities, payments or venue reservations. Use fictional
+          No verified identities, money transfers or venue reservations. Use fictional
           details during testing.
         </p>
       </footer>
       <dialog
         ref={dialog}
+        aria-labelledby="event-dialog-title"
         onCancel={close}
         onClose={() => {
           setCompose(false);
@@ -535,7 +510,7 @@ export default function Home() {
         </div>
         {compose ? (
           <form onSubmit={create}>
-            <h2>Make room for a good game.</h2>
+            <h2 id="event-dialog-title">{editing ? "Edit event draft" : "Create an event"}</h2>
             <p className="notice">
               Create a pilot listing. Save a draft, check the details, then
               publish to discovery.
@@ -647,9 +622,9 @@ export default function Home() {
         ) : current ? (
           <div>
             <span className="tag">
-              SAMPLE EVENT · {current.status.toUpperCase()}
+              {current.demo ? "SAMPLE EVENT · " : ""}{current.status.toUpperCase()}
             </span>
-            <h2>{current.title}</h2>
+            <h2 id="event-dialog-title">{current.title}</h2>
             <p>{date(current.starts)} · Barcelona time</p>
             <p>{current.venue}</p>
             <p className="description">{current.description}</p>
@@ -671,13 +646,20 @@ export default function Home() {
               </div>
             </div>
             <h3>Come to play</h3>
+            <button className="text-button" disabled={busy} onClick={reload}>Refresh my status</button>
             <p>
               {current.myPlay === "confirmed"
                 ? "Your player place is saved."
                 : current.myPlay === "waitlisted"
-                  ? "You are waitlisted. You will move into the next available place automatically; check back here."
+                  ? `You are number ${current.myWaitPosition ?? "—"} on the waitlist. When a player cancels, the first waiting player moves up automatically. Check back here for your status; no notifications are sent.`
                   : `${Math.max(0, current.capacity - current.players)} player places available. Full games use a waitlist.`}
             </p>
+            {current.myPlay === "confirmed" && (
+              <div className="payment-state">
+                <strong>Payment to organiser: {current.myPaid ? "marked paid" : "not marked paid"}</strong>
+                <p>The organiser records this manually. CourtSide is free and never collects or transfers money. Confirm any amount or correction directly with the organiser.</p>
+              </div>
+            )}
             <h3>Come to watch</h3>
             <p>{current.access}</p>
             <p className="notice">
@@ -686,6 +668,20 @@ export default function Home() {
             </p>
             {current.status === "published" &&
               Date.parse(current.starts) > now && (
+                <>
+                {(!["confirmed", "waitlisted"].includes(current.myPlay || "") || current.myWatch !== "confirmed") && (
+                  <label className="join-name">
+                    Your first name, for the organiser’s roster
+                    <input
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      maxLength={60}
+                      autoComplete="given-name"
+                      placeholder="First name"
+                    />
+                    <span className="notice">Use a fictional name when testing. Your RSVP belongs to this browser; clearing cookies loses access.</span>
+                  </label>
+                )}
                 <div className="actions">
                   <button
                     disabled={busy}
@@ -700,7 +696,7 @@ export default function Home() {
                     }
                   >
                     {["confirmed", "waitlisted"].includes(current.myPlay || "")
-                      ? "Cancel my player RSVP"
+                      ? current.myPlay === "waitlisted" ? "Leave the waitlist" : "I can’t make it"
                       : current.players >= current.capacity
                         ? "Join player waitlist"
                         : "Join to play"}
@@ -717,6 +713,10 @@ export default function Home() {
                       : "Come watch"}
                   </button>
                 </div>
+                {["confirmed", "waitlisted"].includes(current.myPlay || "") && (
+                  <p className="notice">Leaving frees your place. Rejoining starts a new RSVP at the back of any waitlist, with payment status reset. Arrange any refunds directly with the organiser.</p>
+                )}
+                </>
               )}
             {current.status === "published" &&
               Date.parse(current.starts) <= now && (
@@ -727,9 +727,41 @@ export default function Home() {
             {current.status === "cancelled" && (
               <p className="error">This event has been cancelled.</p>
             )}
-            {current.mine && (
+            {!!current.mine && (
               <div className="owner-tools">
                 <h3>Organiser controls</h3>
+                <p className="notice">Only the browser that created this event can see and manage its roster. This is not a shared organiser account.</p>
+                <div className="roster">
+                  <h4>Player and spectator roster</h4>
+                  <p className="notice">Mark payments received outside CourtSide. These are manual records, not payment verification or collection.</p>
+                  {rosterError ? <p role="alert" className="error">{rosterError}</p>
+                    : roster?.event !== current.id ? <p>Loading roster…</p>
+                    : roster.participants.length === 0 ? <p className="notice">No active RSVPs yet. Publish the event and share its invitation.</p>
+                    : <ul className="roster-list">
+                        {roster.participants.map((participant) => (
+                          <li key={participant.id}>
+                            <div>
+                              <strong>{participant.name || "Name not recorded"}</strong>
+                              <span>{participant.role === "watch" ? "Spectator interest" : participant.state === "waitlisted" ? "Player · waitlisted" : "Player · confirmed"}</span>
+                            </div>
+                            {participant.role === "play" && participant.state === "confirmed" ? (
+                              <button
+                                className={participant.paid ? "payment-toggle paid" : "payment-toggle secondary"}
+                                disabled={busy || current.status === "cancelled"}
+                                aria-label={`${participant.name || "Player"}: ${participant.paid ? "paid" : "not paid"}. Mark ${participant.paid ? "not paid" : "paid"}`}
+                                aria-pressed={participant.paid === true}
+                                onClick={async () => {
+                                  const result = await action(`/api/participants?event=${encodeURIComponent(current.id)}`, { id: participant.id, paid: !participant.paid }, "PATCH");
+                                  if (result) setNotice(`${participant.name || "Player"} marked ${participant.paid ? "not paid" : "paid"}. No money was moved.`);
+                                }}
+                              >
+                                {participant.paid ? "Paid ✓" : "Not paid"}
+                              </button>
+                            ) : <span className="notice">Payment not tracked</span>}
+                          </li>
+                        ))}
+                      </ul>}
+                </div>
                 {current.status === "draft" && (
                   <>
                     <button
@@ -759,7 +791,7 @@ export default function Home() {
                       Edit draft
                     </button>
                     <p className="notice">
-                      Publishing lists this sample in this pilot. Review venue,
+                      Publishing lists this event in this pilot. Review venue,
                       time and description first.
                     </p>
                     <button
@@ -850,7 +882,7 @@ export default function Home() {
           </div>
         ) : (
           <div>
-            <h2>{loaded ? "Event unavailable" : "Loading event…"}</h2>
+            <h2 id="event-dialog-title">{loaded ? "Event unavailable" : "Loading event…"}</h2>
             <p>It may be private, cancelled, or no longer available.</p>
           </div>
         )}

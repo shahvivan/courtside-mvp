@@ -1,14 +1,13 @@
-# MVP scope and pilot decisions
+# CourtSide unified scope — 13 October 2026
 
-Current user-authorized task: read the Obsidian venture context and build an MVP using multiple agents, a research agent and independent verifier. Latest venture decision remains organiser/event-led; players and spectators are both core. Court booking or a generic player-only matching app would miss that decision.
+User request: combine the shared GitHub app and later classroom work into one navigable project, including Claude's cancellation/waitlist and paid-status ideas. Publishing source is authorised; public deployment is not.
 
-Included: discover/filter events, separate play/watch RSVP, create/edit draft, human review/publish, organiser counts, player capacity/waitlist/promotion, cancelled event visibility, local model draft assistance, template fallback, invitation copy, event-data export.
+Included: discovery/filtering, create/edit drafts, reviewed publishing, named Play/Watch RSVP, capacity and FIFO waitlist, cancellation, owner-only roster and manual paid-status tracking, participant payment status, invitation drafts, event export, optional local AI descriptions and the synthetic evidence fixture.
 
-Excluded: commercial deployment, auto-outreach, payments, public contact details, audience predictions, fictitious interviews or traction.
+CourtSide stays free and does not move money. A paid flag describes the current registration, not verified payment evidence. Cancellation clears it; rejoin requires rechecking externally paid amounts. It is not an accounting ledger. RSVP intentions are not attendance.
 
-Three assumptions to test with real people:
-1. Organisers have meaningful unmet turnout pain beyond what their existing channels solve.
-2. Players will use another signup channel.
-3. Spectators will choose to attend local amateur events after discovering them.
+Excluded: payment processing, automatic reminders/outreach, verified accounts, shared public hosting, venue bookings, arbitrary chat import, bank matching, fabricated customer validation or production deployment.
 
-Suggested pilot: one organiser, one event and a small recruited test group. Ask about their last actual event before showing the product. Record observed signup completion, organiser time, separate play/watch intentions and actual turnout after a real approved event. Record declines and failed use, not only enthusiastic feedback. Choose success thresholds with the organiser before testing; no fabricated numerical target is asserted here.
+Vivan reports AI personas are allowed for the assignment. They are not real customer interviews or proof of demand. Asking classmates which of no-shows, payment chasing and confirmations hurts most remains proposed research; no answers are invented. Finished Session 4/5 handouts remain unchanged.
+
+Historical join-page preparation preceded the timed sprint according to the supplied conversation. Claude reported a 09:37 start for later features. This integration is subsequent work and does not rewrite classroom timestamps.

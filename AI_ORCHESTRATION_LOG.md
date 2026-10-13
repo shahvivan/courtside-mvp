@@ -21,6 +21,12 @@ Independent review found sample identifiers exposed their owner capability. Repl
 
 ## Human checkpoints still open
 
+### October 13 unified integration
+
+Vivan requested one navigable version in the existing shared GitHub repository, incorporating Claude's cancellation/waitlist promotion and paid/unpaid ideas. Work was staged on `integration/session6-unified` in a separate worktree from the preserved original project. Backend and frontend specialists implemented named database-backed RSVP and owner-only payment status, while the main agent preserved the synthetic review fixture, updated navigation/setup documentation, and ran browser checks. Independent reviewers tested API privacy, concurrency, FIFO and migration compatibility, then repeated the release gate after focused dependency security updates. See `verification/unified-integration.md` for actual results and residuals.
+
+This work is subsequent integration, not a claim about the time or authorship of classroom sprint work. No persona answers, real interviews or customer validation were created. Session 4/5 handouts remain unchanged. Publishing GitHub source was authorised; public app deployment was not.
+
 Vivan and Maximilian must review the product, brand and real organiser feedback. No demand validation, five-interview completion, market advantage or real traction is claimed. This log is a factual AI work record, not Vivan's personal reflection. Append his actual judgments after he tries it.
 
 See independent report in verification for actual checks and limits. Local AI suggestions are always proposals; human must apply, save and publish separately. Documentation: https://docs.ollama.com/api/chat and https://docs.ollama.com/capabilities/structured-outputs.

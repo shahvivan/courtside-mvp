@@ -15,4 +15,15 @@ export type SportEvent = {
   spectators: number;
   myPlay?: string;
   myWatch?: string;
+  myPaid: boolean | null;
+  myName?: string | null;
+  myWaitPosition?: number | null;
+};
+
+export type Participant = {
+  id: number;
+  name: string;
+  role: "play" | "watch";
+  state: "confirmed" | "waitlisted";
+  paid: boolean | null;
 };
