@@ -1,8 +1,28 @@
 # CourtSide unified architecture
 
+## Session 6 update (hackathon of 13 October 2026)
+
+Documented on 26 October 2026. This section describes what the end-of-class commit 0c982fd (13 October 2026, 10:08) added. The sections below describe the full app.
+
+Goal of the hackathon: user proof for our riskiest guess, that a casual player can join a game alone, within two minutes, through a join link with an instant status.
+
+What changed on 13 October:
+
+1. Joining asks for a first name, checked on the server, so the organiser's roster shows who is coming. The player chooses Play or Watch.
+2. Instant status after joining: place saved, waitlist number, or watching. Spectators never use player places.
+3. Cancellation: "I can't make it" and "Leave the waitlist". The earliest waitlisted player is promoted automatically (first in, first out).
+4. Organiser-only roster with a manual paid / not paid mark for confirmed players. Decision on 13 October: CourtSide stays free and never moves money. The mark only records payments made directly to the organiser, because we believe chasing payments is a recurring problem for organisers (not yet tested).
+5. The Session 4/5 evidence review page now lives in the same app as a separate, clearly synthetic page.
+
+Key choices: one app instead of a separate join page; capacity and the waitlist are enforced in the database so two people cannot take the last place; first names only; an anonymous browser cookie instead of accounts; runs locally, with no public hosting yet.
+
+Not built: payment processing, notifications, accounts, public hosting.
+
+Open assumptions to test: people join without help; a waitlist number is understood as "no place yet"; organisers keep the paid mark up to date. Planned test: 12 casual players, target at least 10 joining alone within two minutes.
+
 ## Product
 
-One React/Vinext app: Discover → event details → named Play/Watch RSVP → My RSVPs. Organise manages drafts, publication, rosters and paid/unpaid notes. Evidence review links to a separate classroom fixture with a return link.
+One React/Vinext app: Discover → event details → named Play/Watch RSVP → My RSVPs. Organise manages drafts, publication, rosters and a paid/unpaid mark. Evidence review links to a separate classroom fixture with a return link.
 
 Visual thesis: calm warm surfaces, clear typography and CourtSide green. Content plan: navigation, workspace, filters/list, event detail, owner tools. Interaction thesis: short list entrance, visible row focus/hover and explicit pending/success states, respecting reduced motion.
 
