@@ -919,8 +919,10 @@ export default function Home() {
                                 disabled={busy}
                                 aria-label={`${participant.name || "Player"}: ${participant.showed == null ? "attendance not recorded" : participant.showed ? "showed up" : "did not show"}`}
                                 onClick={async () => {
-                                  const result = await action("/api/learning", { action: "attendance", event: current.id, rsvp: participant.id, showed: participant.showed === false });
-                                  if (result) setNotice(`${participant.name || "Player"} marked as ${participant.showed === false ? "showed up" : "did not show"}.`);
+                                  // Not marked yet → showed up; showed up → didn't show; didn't show → showed up.
+                                  const next = participant.showed !== true;
+                                  const result = await action("/api/learning", { action: "attendance", event: current.id, rsvp: participant.id, showed: next });
+                                  if (result) setNotice(`${participant.name || "Player"} marked as ${next ? "showed up" : "did not show"}.`);
                                 }}
                               >
                                 {participant.showed == null ? "Mark showed up" : participant.showed ? "Showed up ✓" : "Didn't show"}
@@ -942,7 +944,7 @@ export default function Home() {
                   ) : (
                     <div className="share-box">
                       <strong>After the game: who showed up?</strong>
-                      <p className="notice">Tap each confirmed player once (showed up), twice (didn&apos;t show). Then finish. This teaches CourtSide how many players games like this lose. It is never shown per player.</p>
+                      <p className="notice">Tap each confirmed player once (showed up), twice (didn&apos;t show). Mark everyone, then finish. This teaches CourtSide how many players games like this lose. It is never shown per player.</p>
                       <button
                         disabled={busy}
                         onClick={async () => {

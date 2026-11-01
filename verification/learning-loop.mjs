@@ -58,6 +58,8 @@ check(early2.status === 409, "attendance is refused before kickoff");
 console.log("waiting for kickoff…");
 await sleep(Math.max(0, Date.parse(starts) - Date.now() + 2000));
 
+const tooEarly = await owner("/api/learning", "POST", { action: "close", event: games[0] });
+check(tooEarly.status === 400 && /not marked/.test(tooEarly.data.error), "cannot finish a game while players are unmarked");
 for (const [g, id] of games.entries()) {
   const roster = await owner(`/api/participants?event=${id}`);
   const confirmed = roster.data.participants.filter((p) => p.role === "play" && p.state === "confirmed");

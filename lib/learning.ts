@@ -114,6 +114,16 @@ export async function closeGame(db: Db, owner: string, eventId: string) {
     .first<{ id: string; sport: string; starts: string; capacity: number }>();
   if (!event) throw new Error("Event not found or not yours.");
   if (Date.parse(event.starts) > Date.now()) throw new Error("Record attendance after the game has started.");
+  // Unmarked players would silently count as "showed up" and make the rate look too good.
+  const unmarked = await db
+    .prepare(
+      `SELECT COUNT(*) AS n FROM rsvps r WHERE r.event=? AND r.role='play' AND r.state='confirmed'
+       AND r.session NOT IN (SELECT session FROM count_optouts)
+       AND NOT EXISTS (SELECT 1 FROM attendance a WHERE a.rsvp=r.id)`,
+    )
+    .bind(eventId)
+    .first<{ n: number }>();
+  if (unmarked?.n) throw new Error(`Mark every confirmed player first (${unmarked.n} not marked yet).`);
   const kickoff = event.starts;
   const dayBefore = new Date(Date.parse(kickoff) - 24 * 3600 * 1000).toISOString();
   const late = await db
