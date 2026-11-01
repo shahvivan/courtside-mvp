@@ -1,5 +1,23 @@
 # CourtSide unified architecture
 
+## Session 7 update (learning loop, 1 November 2026)
+
+Documented on 1 November 2026. Branch `feature/session7-learning-loop`. Built with an AI coding assistant; check it before merging.
+
+The loop learns about game types, never about individual players. A game type is one organiser + one sport + one time slot (weekday or weekend; morning, afternoon or evening, Barcelona time).
+
+1. **Input.** Player join, cancel and waitlist-promotion times go to `rsvp_log` (no names, no cookie id). After kickoff the organiser marks each confirmed player "showed up" or "didn't show" (`attendance`).
+2. **Processing.** When the organiser presses "Finish attendance", the game's lost players = confirmed players who cancelled in the last 24 hours before kickoff + no-shows. Stored in `game_learning`.
+3. **Output.** When creating a game, the organiser sees a reserves suggestion: drop rate of that game type × player places. With fewer than 3 finished games of the type it falls back to all the organiser's games; with fewer than 3 in total there is no suggestion. The organiser accepts, edits or ignores it; the choice is stored. The chosen reserves go into the prepared invitation, and a prepared "still coming?" message is available. Nothing is sent automatically.
+4. **Learning.** Each finished game updates the rate. Prediction (stored when the organiser answered the suggestion) can be compared with what happened.
+5. **Human checks.** The organiser approves every suggestion. Any time a game type's rate is first set or moves by 10 points or more, a row goes to `rule_changes`, shown under Organise as "Big changes to review" with "Mark reviewed".
+
+Privacy and control: a line on the game page explains what is counted. A player can press "Leave my sign-ups out": their logged times and attendance marks are deleted and nothing new is logged. An organiser can switch suggestions off. Attendance marks are only used in per-game totals and never shown per player across games.
+
+Limits: the review list is per organiser, because there are no founder accounts and each laptop has its own database. Rates on a handful of games are noisy. No model is trained; this is counting.
+
+Check: `node verification/learning-loop.mjs http://127.0.0.1:3000` on a fresh local server (about 2 minutes, 18 assertions). The existing `verification/integration-api.mjs` still passes (37 assertions).
+
 ## Session 6 update (hackathon of 13 October 2026)
 
 Documented on 26 October 2026. This section describes what the end-of-class commit 0c982fd (13 October 2026, 10:08) added. The sections below describe the full app.

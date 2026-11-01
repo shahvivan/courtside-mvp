@@ -8,10 +8,11 @@ export async function GET(req: Request) {
   const owned = await db.prepare("SELECT id FROM events WHERE id=? AND owner=?").bind(event, sid).first();
   if (!owned) return response(req, sid, { error: "Event not found or not yours." }, 404);
   const rows = await db.prepare(`SELECT r.id,COALESCE(m.name,'Unnamed participant') AS name,r.role,r.state,
-    CASE WHEN r.role='play' AND r.state='confirmed' THEN COALESCE(m.paid,0) ELSE NULL END AS paid
-    FROM rsvps r LEFT JOIN participant_metadata m ON m.rsvp=r.id
+    CASE WHEN r.role='play' AND r.state='confirmed' THEN COALESCE(m.paid,0) ELSE NULL END AS paid,
+    CASE WHEN r.role='play' AND r.state='confirmed' THEN a.showed ELSE NULL END AS showed
+    FROM rsvps r LEFT JOIN participant_metadata m ON m.rsvp=r.id LEFT JOIN attendance a ON a.rsvp=r.id
     WHERE r.event=? AND r.state IN ('confirmed','waitlisted') ORDER BY r.id`).bind(event).all();
-  return response(req, sid, { participants: rows.results.map(row => ({ ...row, paid: row.paid == null ? null : Boolean(row.paid) })) });
+  return response(req, sid, { participants: rows.results.map(row => ({ ...row, paid: row.paid == null ? null : Boolean(row.paid), showed: row.showed == null ? null : Boolean(row.showed) })) });
 }
 
 export async function PATCH(req: Request) {

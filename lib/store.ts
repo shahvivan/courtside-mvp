@@ -1,4 +1,5 @@
 import { env } from "cloudflare:workers";
+import { setupLearning } from "./learning";
 
 export async function database() {
   const db = env.DB;
@@ -16,6 +17,7 @@ export async function database() {
       `CREATE TABLE IF NOT EXISTS participant_metadata (rsvp INTEGER PRIMARY KEY, name TEXT NOT NULL, paid INTEGER NOT NULL DEFAULT 0 CHECK(paid IN (0,1)))`,
     ),
   ]);
+  await setupLearning(db);
   return db;
 }
 

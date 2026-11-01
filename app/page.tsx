@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import type { Participant, SportEvent } from "../lib/types";
+import type { GameLearning, Participant, RuleChange, SportEvent, Suggestion } from "../lib/types";
 
 const sports = ["Beach volleyball", "Padel", "Basketball", "Beach tennis"];
 const date = (s: string) =>
@@ -44,6 +44,16 @@ export default function Home() {
   const [name, setName] = useState("");
   const [roster, setRoster] = useState<{ event: string; participants: Participant[] } | null>(null);
   const [rosterError, setRosterError] = useState("");
+  // Session 7 learning loop
+  const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
+  const [reserveInput, setReserveInput] = useState(0);
+  const [choice, setChoice] = useState<{ choice: "accepted" | "edited" | "dismissed"; chosen: number } | null>(null);
+  const [game, setGame] = useState<{ event: string; data: GameLearning | null } | null>(null);
+  const [learning, setLearning] = useState<{ optedOut: boolean; suggestionsOn: boolean; changes: RuleChange[] } | null>(null);
+  async function loadLearning() {
+    const r = await fetch("/api/learning");
+    if (r.ok) setLearning(await r.json() as { optedOut: boolean; suggestionsOn: boolean; changes: RuleChange[] });
+  }
   async function assist() {
     setBusy(true);
     setError("");
@@ -107,6 +117,10 @@ export default function Home() {
       .catch((e) => {
         if (active) setError(e.message);
       });
+    fetch("/api/learning")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (active && data) setLearning(data as { optedOut: boolean; suggestionsOn: boolean; changes: RuleChange[] }); })
+      .catch(() => undefined);
     const timer = setInterval(() => setNow(Date.now()), 30000);
     return () => {
       active = false;
@@ -135,6 +149,33 @@ export default function Home() {
       });
     return () => { active = false; };
   }, [selected, events]);
+  useEffect(() => {
+    const event = events.find((item) => item.id === selected);
+    if (!event?.mine) return;
+    let active = true;
+    fetch(`/api/learning?event=${encodeURIComponent(event.id)}`)
+      .then(async (r) => (r.ok ? ((await r.json()) as { game: GameLearning | null }) : null))
+      .then((data) => { if (active && data) setGame({ event: event.id, data: data.game }); })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [selected, events]);
+  useEffect(() => {
+    if (!compose || !form.starts || !Number.isInteger(form.capacity) || form.capacity < 1) return;
+    let active = true;
+    const timer = setTimeout(() => {
+      const query = new URLSearchParams({ sport: form.sport, starts: new Date(form.starts).toISOString(), capacity: String(form.capacity) });
+      fetch(`/api/learning?${query}`)
+        .then(async (r) => (r.ok ? ((await r.json()) as { suggestion: Suggestion }) : null))
+        .then((data) => {
+          if (!active || !data) return;
+          setSuggestion(data.suggestion);
+          setChoice(null);
+          if (!data.suggestion.off && data.suggestion.ready) setReserveInput(data.suggestion.reserves);
+        })
+        .catch(() => undefined);
+    }, 300);
+    return () => { active = false; clearTimeout(timer); };
+  }, [compose, form.sport, form.starts, form.capacity]);
   async function action(url: string, data: unknown, method = "POST") {
     setBusy(true);
     setError("");
@@ -168,6 +209,9 @@ export default function Home() {
     setEditing(null);
     setRoster(null);
     setRosterError("");
+    setSuggestion(null);
+    setChoice(null);
+    setGame(null);
   }
   async function rsvp(e: SportEvent, role: string, cancel = false) {
     if (!cancel && !name.trim()) {
@@ -199,8 +243,13 @@ export default function Home() {
       editing ? { id: editing, action: "edit", data: payload } : payload,
       editing ? "PATCH" : "POST",
     );
+    if (result && choice && suggestion && !suggestion.off && suggestion.ready) {
+      await action("/api/learning", { action: "choice", event: editing || result.id, ...choice });
+    }
     if (result) {
       setCompose(false);
+      setSuggestion(null);
+      setChoice(null);
       setSelected(editing || result.id);
       setEditing(null);
       setForm(blank);
@@ -224,7 +273,12 @@ export default function Home() {
   }
   function invitation(e: SportEvent) {
     setShare(
-      `Come ${e.sport.toLowerCase() === "basketball" ? "shoot hoops" : "join us"} at ${e.title}. ${date(e.starts)} (Barcelona time). ${e.venue}. ${Math.max(0, e.capacity - e.players)} player places left. Prefer to watch? Register spectator interest. Pilot event, confirm details with the organiser.\n${location.origin}/?event=${encodeURIComponent(e.id)}`,
+      `Come ${e.sport.toLowerCase() === "basketball" ? "shoot hoops" : "join us"} at ${e.title}. ${date(e.starts)} (Barcelona time). ${e.venue}. ${Math.max(0, e.capacity - e.players)} player places left. Prefer to watch? Register spectator interest. ${game?.event === e.id && game.data?.chosen_reserves ? `We also keep ${game.data.chosen_reserves} reserve${game.data.chosen_reserves === 1 ? "" : "s"} on the waitlist, so join even if it looks full. ` : ""}Pilot event, confirm details with the organiser.\n${location.origin}/?event=${encodeURIComponent(e.id)}`,
+    );
+  }
+  function stillComing(e: SportEvent) {
+    setShare(
+      `Quick check for ${e.title}, ${date(e.starts)} (Barcelona time): are you still coming? If you can't make it, open the link and tap "I can't make it" so the first person on the waitlist gets your place.\n${location.origin}/?event=${encodeURIComponent(e.id)}`,
     );
   }
   function exportEvents() {
@@ -353,6 +407,56 @@ export default function Home() {
             cookies removes your management access. Player and spectator counts
             are RSVP intentions, not attendance.
           </p>
+        )}
+        {view === "organise" && learning && (
+          <div className="owner-tools learning-panel">
+            <h3>What CourtSide has learned</h3>
+            <p className="notice">
+              Suggestions come from finished games with attendance recorded, per sport and time slot. You approve every suggestion; nothing is sent to players.
+            </p>
+            <button
+              className="secondary"
+              disabled={busy}
+              onClick={async () => {
+                if (await action("/api/learning", { action: "settings", suggestions: !learning.suggestionsOn })) {
+                  await loadLearning();
+                  setNotice(learning.suggestionsOn ? "Suggestions switched off." : "Suggestions switched on.");
+                }
+              }}
+            >
+              {learning.suggestionsOn ? "Switch suggestions off" : "Switch suggestions on"}
+            </button>
+            <h4>Big changes to review</h4>
+            {learning.changes.length === 0 ? (
+              <p className="notice">No big changes yet. A change appears here when a game type&apos;s drop rate is first set or moves by 10 points or more.</p>
+            ) : (
+              <ul className="roster-list">
+                {learning.changes.map((c) => (
+                  <li key={c.id}>
+                    <div>
+                      <strong>{c.sport}, {c.slot}</strong>
+                      <span>
+                        Drop rate {c.old_rate == null ? "first set at" : `${Math.round(c.old_rate * 100)}% →`} {Math.round(c.new_rate * 100)}% after {c.games} games · {date(c.at)}
+                      </span>
+                    </div>
+                    {c.reviewed_at ? (
+                      <span className="notice">Reviewed</span>
+                    ) : (
+                      <button
+                        className="payment-toggle secondary"
+                        disabled={busy}
+                        onClick={async () => {
+                          if (await action("/api/learning", { action: "reviewed", id: c.id })) await loadLearning();
+                        }}
+                      >
+                        Mark reviewed
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         )}
         <div className="filters">
           <label>
@@ -615,6 +719,38 @@ export default function Home() {
               details. Venue access and permits must be checked separately
               before any real event.
             </p>
+            {suggestion && (
+              <div className="share-box learning-card">
+                <strong>Reserves suggestion ✦</strong>
+                {suggestion.off ? (
+                  <p className="notice">Suggestions are switched off. You can turn them back on under Organise.</p>
+                ) : !suggestion.ready ? (
+                  <p className="notice">
+                    After {suggestion.needed} finished games with attendance recorded, CourtSide suggests how many reserves to keep. You have {suggestion.finished} so far.
+                  </p>
+                ) : (
+                  <>
+                    <p>
+                      Games like this usually lose about {suggestion.predicted} of {form.capacity} players to late cancellations or no-shows
+                      ({suggestion.games} finished games: {suggestion.scope}). Suggestion: keep {suggestion.reserves} reserve{suggestion.reserves === 1 ? "" : "s"} on the waitlist
+                      {suggestion.stillComing ? " and send a “still coming?” message the evening before." : "."}
+                    </p>
+                    <label>
+                      Reserves you want
+                      <input type="number" min={0} max={50} step={1} value={reserveInput} onChange={(e) => setReserveInput(Number(e.target.value))} />
+                    </label>
+                    <div className="actions">
+                      <button type="button" className="secondary" onClick={() => setChoice({ choice: reserveInput === suggestion.reserves ? "accepted" : "edited", chosen: reserveInput })}>
+                        {reserveInput === suggestion.reserves ? "Accept suggestion" : "Use my number"}
+                      </button>
+                      <button type="button" className="text-button" onClick={() => setChoice({ choice: "dismissed", chosen: 0 })}>Ignore it</button>
+                    </div>
+                    {choice && <p className="notice">{choice.choice === "dismissed" ? "Suggestion ignored." : `Saved with the draft: ${choice.chosen} reserves.`} Nothing is sent to players.</p>}
+                  </>
+                )}
+                <p className="notice">Counts join and cancel times per game type, never names. It never rates individual players.</p>
+              </div>
+            )}
             <button disabled={busy} type="submit">
               {busy ? "Saving…" : "Save draft →"}
             </button>
@@ -682,6 +818,25 @@ export default function Home() {
                     <span className="notice">Use a fictional name when testing. Your RSVP belongs to this browser; clearing cookies loses access.</span>
                   </label>
                 )}
+                <p className="notice">
+                  CourtSide counts when players join and cancel, per game type and never by name, to suggest how many reserves organisers need.{" "}
+                  {learning?.optedOut ? (
+                    "Your sign-ups are left out of these counts."
+                  ) : (
+                    <button
+                      className="text-button"
+                      disabled={busy}
+                      onClick={async () => {
+                        if (await action("/api/learning", { action: "optout" })) {
+                          await loadLearning();
+                          setNotice("Your sign-ups are now left out of CourtSide's counts.");
+                        }
+                      }}
+                    >
+                      Leave my sign-ups out
+                    </button>
+                  )}
+                </p>
                 <div className="actions">
                   <button
                     disabled={busy}
@@ -758,10 +913,48 @@ export default function Home() {
                                 {participant.paid ? "Paid ✓" : "Not paid"}
                               </button>
                             ) : <span className="notice">Payment not tracked</span>}
+                            {participant.role === "play" && participant.state === "confirmed" && current.status === "published" && Date.parse(current.starts) <= now && !(game?.event === current.id && game.data?.closed_at) && (
+                              <button
+                                className={participant.showed === false ? "payment-toggle danger" : participant.showed ? "payment-toggle paid" : "payment-toggle secondary"}
+                                disabled={busy}
+                                aria-label={`${participant.name || "Player"}: ${participant.showed == null ? "attendance not recorded" : participant.showed ? "showed up" : "did not show"}`}
+                                onClick={async () => {
+                                  const result = await action("/api/learning", { action: "attendance", event: current.id, rsvp: participant.id, showed: participant.showed === false });
+                                  if (result) setNotice(`${participant.name || "Player"} marked as ${participant.showed === false ? "showed up" : "did not show"}.`);
+                                }}
+                              >
+                                {participant.showed == null ? "Mark showed up" : participant.showed ? "Showed up ✓" : "Didn't show"}
+                              </button>
+                            )}
                           </li>
                         ))}
                       </ul>}
                 </div>
+                {game?.event === current.id && game.data?.chosen_reserves != null && game.data.choice !== "dismissed" && (
+                  <p className="notice">Reserves you chose for this game: {game.data.chosen_reserves} (suggested {game.data.suggested_reserves}).</p>
+                )}
+                {current.status === "published" && Date.parse(current.starts) <= now && (
+                  game?.event === current.id && game.data?.closed_at ? (
+                    <p className="rsvp-state">
+                      Attendance finished: {game.data.actual_drops} player{game.data.actual_drops === 1 ? "" : "s"} lost to late cancellations or no-shows
+                      {game.data.predicted_drops != null ? ` (predicted ${game.data.predicted_drops}).` : "."}
+                    </p>
+                  ) : (
+                    <div className="share-box">
+                      <strong>After the game: who showed up?</strong>
+                      <p className="notice">Tap each confirmed player once (showed up), twice (didn&apos;t show). Then finish. This teaches CourtSide how many players games like this lose. It is never shown per player.</p>
+                      <button
+                        disabled={busy}
+                        onClick={async () => {
+                          const result = (await action("/api/learning", { action: "close", event: current.id })) as unknown as { result?: { actual: number; lateCancels: number; noShows: number } } | null;
+                          if (result?.result) setNotice(`Attendance finished: ${result.result.lateCancels} late cancellations + ${result.result.noShows} no-shows.`);
+                        }}
+                      >
+                        Finish attendance
+                      </button>
+                    </div>
+                  )
+                )}
                 {current.status === "draft" && (
                   <>
                     <button
@@ -817,6 +1010,11 @@ export default function Home() {
                     onClick={() => invitation(current)}
                   >
                     Prepare invitation
+                  </button>
+                )}
+                {current.status === "published" && Date.parse(current.starts) > now && (
+                  <button className="secondary" onClick={() => stillComing(current)}>
+                    Prepare “still coming?” message
                   </button>
                 )}
                 {current.status !== "cancelled" && (

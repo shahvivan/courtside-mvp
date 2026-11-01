@@ -68,6 +68,8 @@ npm run build
 node public/review/test.cjs
 # With a local server running; creates fictional test events:
 node verification/integration-api.mjs http://127.0.0.1:3000
+# Session 7 learning loop, on a fresh local server (about 2 minutes):
+node verification/learning-loop.mjs http://127.0.0.1:3000
 ```
 
 `app/`: UI and API. `lib/`: data helpers/types. `db/` and `drizzle/`: schema. `public/review/`: evidence fixture. See `architecturedoc.md`, `SCOPE.md`, and `verification/`. September verification files are historical, not a claim about this integration.
