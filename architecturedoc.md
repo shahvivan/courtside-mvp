@@ -2,11 +2,11 @@
 
 ## Session 7 update (learning loop, 1 November 2026)
 
-Documented on 1 November 2026. Branch `feature/session7-learning-loop`. Built with an AI coding assistant; check it before merging.
+Documented on 1 November 2026, updated 2 November 2026. Branch `feature/session7-learning-loop`. Built with an AI coding assistant; check it before merging.
 
 The loop learns about game types, never about individual players. A game type is one organiser + one sport + one time slot (weekday or weekend; morning, afternoon or evening, Barcelona time).
 
-1. **Input.** Player join, cancel and waitlist-promotion times go to `rsvp_log` (no names, no cookie id). After kickoff the organiser marks each confirmed player "showed up" or "didn't show" (`attendance`).
+1. **Input.** Player join, cancel and waitlist-promotion times go to `rsvp_log` (no names or cookie id; rows are linked only by the sign-up id). After kickoff the organiser marks each confirmed player "showed up" or "didn't show" (`attendance`).
 2. **Processing.** When the organiser presses "Finish attendance", the game's lost players = confirmed players who cancelled in the last 24 hours before kickoff + no-shows. Stored in `game_learning`.
 3. **Output.** When creating a game, the organiser sees a reserves suggestion: drop rate of that game type × player places. With fewer than 3 finished games of the type it falls back to all the organiser's games; with fewer than 3 in total there is no suggestion. The organiser accepts, edits or ignores it; the choice is stored. The chosen reserves go into the prepared invitation, and a prepared "still coming?" message is available. Nothing is sent automatically.
 4. **Learning.** Each finished game updates the rate. Prediction (stored when the organiser answered the suggestion) can be compared with what happened.
@@ -16,7 +16,26 @@ Privacy and control: a line on the game page explains what is counted. A player 
 
 Limits: the review list is per organiser, because there are no founder accounts and each laptop has its own database. Rates on a handful of games are noisy. No model is trained; this is counting.
 
-Check: `node verification/learning-loop.mjs http://127.0.0.1:3000` on a fresh local server (about 2 minutes, 18 assertions). The existing `verification/integration-api.mjs` still passes (37 assertions).
+Check: `node verification/learning-loop.mjs http://127.0.0.1:3000` on a fresh local server (about 2 minutes, 19 assertions). The red-line test `node verification/no-individual-scoring.mjs http://127.0.0.1:3000` checks that no player is scored, ranked, flagged or blocked on attendance (31 assertions). The existing `verification/integration-api.mjs` still passes (37 assertions). All three re-run and passing on 2 November 2026.
+
+Session 7 choices (session log, 1 November 2026):
+
+- Count drop rates per game type; no model is trained.
+- Learn per game type (organiser + sport + time slot), never per player.
+- Wait for 3 finished games before suggesting; until a type has 3, fall back to all the organiser's games.
+- Send any rate that is first set or moves by 10 points or more to a human review list.
+- The organiser approves every suggestion; nothing is sent to players automatically.
+- Reserves only sit on the waitlist, so nobody loses a confirmed place.
+- Players can opt out of being counted; organisers can switch suggestions off.
+- Red line: never score, flag, rank or block an individual player on attendance.
+- Planned, not built: a game level field (beginner, mixed, advanced) to compare rates fairly.
+
+Known issues found in review (2 November 2026), to fix next:
+
+- A rate move of exactly 10 points can miss the review list (decimal rounding).
+- A player who cancels after kickoff is not counted as lost.
+- If a player cancels, rejoins and then opts out, logs from the first sign-up remain.
+- The drop rate divides by player places (flagged in our AI code review; next to fix).
 
 ## Session 6 update (hackathon of 13 October 2026)
 
