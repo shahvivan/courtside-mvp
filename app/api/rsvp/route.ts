@@ -1,4 +1,4 @@
-import { database, participantName, response, session, validOrigin } from "../../../lib/store";
+import { currentUser, database, participantName, response, session, validOrigin } from "../../../lib/store";
 export async function POST(req: Request) {
   const sid = session(req);
   if (!validOrigin(req))
@@ -19,6 +19,8 @@ export async function POST(req: Request) {
     )
       return response(req, sid, { error: "Invalid RSVP." }, 400);
     const db = await database();
+    if (action === "join" && !(await currentUser(db, sid)))
+      return response(req, sid, { error: "Please log in to join a game." }, 401);
     if (action === "join") {
       let name: string;
       try { name = participantName(suppliedName); }
@@ -34,7 +36,7 @@ export async function POST(req: Request) {
         db
           .prepare(
             `INSERT INTO rsvps (event,session,role,state)
-    SELECT e.id,?,?, CASE WHEN ?='watch' OR (SELECT COUNT(*) FROM rsvps WHERE event=e.id AND role='play' AND state='confirmed')<e.capacity THEN 'confirmed' ELSE 'waitlisted' END
+    SELECT e.id,?,?, CASE WHEN ?='watch' OR ((SELECT COUNT(*) FROM rsvps WHERE event=e.id AND role='play' AND state='confirmed')<e.capacity AND NOT EXISTS(SELECT 1 FROM rsvps WHERE event=e.id AND role='play' AND state='waitlisted')) THEN 'confirmed' ELSE 'waitlisted' END
     FROM events e WHERE e.id=? AND e.status='published' AND e.starts>?
     ON CONFLICT(event,session,role) DO NOTHING`,
           )

@@ -28,7 +28,13 @@ check(!/\battendance\b/.test(rsvpRoute) && !/\bshowed\b/.test(rsvpRoute), "joini
 // ---------- Part 2: a player who never shows up is treated like anyone else ----------
 function client() {
   let cookie = "";
+  let account = null;
   return async (path, method = "GET", data) => {
+    if (!account) {
+      account = fetch(base + "/api/account", { method: "POST", headers: { Origin: base, "Content-Type": "application/json" }, body: JSON.stringify({ action: "signup", role: "organiser", name: "Tester", email: `t-${crypto.randomUUID()}@test.local`, password: "testpass123" }) })
+        .then((r) => { const set = r.headers.get("set-cookie"); if (set) cookie = set.split(";")[0]; });
+    }
+    await account;
     const res = await fetch(base + path, {
       method,
       headers: { ...(cookie ? { Cookie: cookie } : {}), Origin: base, "Content-Type": "application/json" },

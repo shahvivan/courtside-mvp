@@ -1,9 +1,11 @@
-import { database, response, session, validOrigin } from "../../../lib/store";
+import { currentUser, database, response, session, validOrigin } from "../../../lib/store";
 export async function POST(req: Request) {
   const sid = session(req);
   if (!validOrigin(req))
     return response(req, sid, { error: "Origin not allowed." }, 403);
   const db = await database();
+  if ((await currentUser(db, sid))?.role !== "organiser")
+    return response(req, sid, { error: "Only organiser accounts can add sample games." }, 403);
   const examples = [
     [
       "sand",

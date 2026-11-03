@@ -17,8 +17,22 @@ export async function database() {
       `CREATE TABLE IF NOT EXISTS participant_metadata (rsvp INTEGER PRIMARY KEY, name TEXT NOT NULL, paid INTEGER NOT NULL DEFAULT 0 CHECK(paid IN (0,1)))`,
     ),
   ]);
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, sid TEXT NOT NULL UNIQUE, email TEXT NOT NULL UNIQUE, name TEXT NOT NULL, role TEXT NOT NULL CHECK(role IN ('organiser','player')), salt TEXT NOT NULL, hash TEXT NOT NULL, created TEXT DEFAULT CURRENT_TIMESTAMP)`,
+  ).run();
   await setupLearning(db);
+  if (!paymentColumns) {
+    const cols = await db.prepare("PRAGMA table_info(events)").all<{ name: string }>();
+    const have = new Set(cols.results.map((c) => c.name));
+    for (const col of ["price", "bizum"])
+      if (!have.has(col)) await db.prepare(`ALTER TABLE events ADD COLUMN ${col} TEXT NOT NULL DEFAULT ''`).run();
+    paymentColumns = true;
+  }
   return db;
+}
+let paymentColumns = false;
+export async function currentUser(db: D1Database, sid: string) {
+  return db.prepare("SELECT name, role FROM users WHERE sid=?").bind(sid).first<{ name: string; role: "organiser" | "player" }>();
 }
 
 export function session(req: Request) {
@@ -63,7 +77,7 @@ export function validateEvent(data: Record<string, unknown>) {
   for (const [field, min, max] of [
     ["title", 3, 100],
     ["venue", 3, 160],
-    ["description", 10, 2000],
+    ["description", 0, 2000],
     ["access", 3, 300],
   ] as const) {
     if (
@@ -71,7 +85,12 @@ export function validateEvent(data: Record<string, unknown>) {
       (data[field] as string).trim().length < min ||
       (data[field] as string).length > max
     )
-      throw new Error(`Please enter ${field} (${min}–${max} characters).`);
+      throw new Error(
+        field === "title" ? "Give the game a name (3–100 characters)."
+          : field === "venue" ? "Add where you'll play (3–160 characters)."
+            : field === "description" ? "Keep the notes under 2,000 characters."
+              : "Spectator info must be 3–300 characters.",
+      );
   }
   if (!sports.includes(String(data.sport)))
     throw new Error("Choose an available sport.");
@@ -89,7 +108,13 @@ export function validateEvent(data: Record<string, unknown>) {
     Date.parse(data.starts) < Date.now() + 60000
   )
     throw new Error("Choose an event time in the future.");
+  const price = typeof data.price === "string" ? data.price.trim() : "";
+  const bizum = typeof data.bizum === "string" ? data.bizum.trim() : "";
+  if (price.length > 20) throw new Error("Keep the price short, for example €5.");
+  if (bizum && !/^[+\d][\d ]{5,19}$/.test(bizum)) throw new Error("Enter a valid Bizum phone number.");
   return {
+    price,
+    bizum,
     title: String(data.title).trim(),
     sport: String(data.sport),
     venue: String(data.venue).trim(),

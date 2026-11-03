@@ -18,6 +18,9 @@ export type SportEvent = {
   myPaid: boolean | null;
   myName?: string | null;
   myWaitPosition?: number | null;
+  price?: string;
+  bizum?: string;
+  names?: string | null;
 };
 
 export type Participant = {

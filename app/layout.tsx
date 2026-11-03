@@ -13,19 +13,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Courtside — Barcelona games, players and crowds",
+  title: "CourtSide · Pickup games in Barcelona",
   description:
-    "An organiser led pilot for local sports events, player signups and spectator discovery in Barcelona.",
-  metadataBase: new URL("http://localhost:3000"),
+    "Find a pickup game in Barcelona or organise your own: padel, beach volleyball, basketball.",
+  metadataBase: new URL("https://courtside.courtsidebcn.workers.dev"),
   openGraph: {
-    title: "Courtside — Bring the game. Find your people.",
+    title: "CourtSide · Join the game",
     description:
-      "Play, watch and organise local sport in Barcelona. Private pilot.",
+      "Pickup padel, beach volleyball and basketball in Barcelona. Tap to grab a spot.",
     images: ["/og.png"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Courtside",
+    title: "CourtSide",
     images: ["/og.png"],
   },
 };
