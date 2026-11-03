@@ -38,7 +38,7 @@ export function response(
     headers: {
       "Cache-Control": "no-store",
       "X-Content-Type-Options": "nosniff",
-      "Set-Cookie": `courtside=${sid}; Path=/; HttpOnly; SameSite=Strict; Max-Age=2592000${new URL(req.url).protocol === "https:" ? "; Secure" : ""}`,
+      "Set-Cookie": `courtside=${sid}; Path=/; HttpOnly; SameSite=Strict; Max-Age=34560000${new URL(req.url).protocol === "https:" ? "; Secure" : ""}`,
     },
   });
 }

@@ -42,6 +42,59 @@ export default function Home() {
   const [editing, setEditing] = useState<string | null>(null);
   const [now, setNow] = useState(0);
   const [name, setName] = useState("");
+  const [profile, setProfile] = useState<{ name: string; email: string; role: "organiser" | "player" } | null>(null);
+  const [profileReady, setProfileReady] = useState(false);
+  const [signup, setSignup] = useState<{ mode: "signup" | "login"; role: "organiser" | "player" | ""; name: string; email: string; password: string; confirm: string; error: string; busy: boolean }>({ mode: "signup", role: "", name: "", email: "", password: "", confirm: "", error: "", busy: false });
+  useEffect(() => {
+    let active = true;
+    fetch("/api/account", { cache: "no-store" })
+      .then((r) => r.json() as Promise<{ user: { name: string; email: string; role: "organiser" | "player" } | null }>)
+      .then((d) => {
+        if (!active) return;
+        if (d.user) {
+          setProfile(d.user);
+          setName(d.user.name);
+          if (d.user.role === "organiser" && !new URLSearchParams(location.search).get("event")) setView("organise");
+        }
+        setProfileReady(true);
+      })
+      .catch(() => active && setProfileReady(true));
+    return () => { active = false; };
+  }, []);
+  async function finishSignup() {
+    const f = signup;
+    const fail = (error: string) => setSignup({ ...f, error, busy: false });
+    if (f.mode === "signup") {
+      if (!f.role) return fail("Choose how you'll use CourtSide.");
+      if (!f.name.trim()) return fail("Enter your first name.");
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) return fail("Enter a valid email address.");
+    if (f.mode === "signup" && f.password.length < 8) return fail("Use a password of at least 8 characters.");
+    if (f.mode === "signup" && f.password !== f.confirm) return fail("The passwords don't match.");
+    if (f.mode === "login" && !f.password) return fail("Enter your password.");
+    setSignup({ ...f, error: "", busy: true });
+    try {
+      const r = await fetch("/api/account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: f.mode, role: f.role, name: f.name, email: f.email, password: f.password }),
+      });
+      const d = (await r.json()) as { user?: { name: string; email: string; role: "organiser" | "player" }; error?: string };
+      if (!r.ok || !d.user) return fail(d.error || "Something went wrong. Try again.");
+      setProfile(d.user);
+      setName(d.user.name);
+      setSignup({ mode: "login", role: "", name: "", email: "", password: "", confirm: "", error: "", busy: false });
+      setView(d.user.role === "organiser" && !new URLSearchParams(location.search).get("event") ? "organise" : "discover");
+    } catch {
+      fail("Couldn't reach CourtSide. Check your connection and try again.");
+    }
+  }
+  async function logOut() {
+    try {
+      await fetch("/api/account", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) });
+    } catch {}
+    location.href = "/";
+  }
   const [roster, setRoster] = useState<{ event: string; participants: Participant[] } | null>(null);
   const [rosterError, setRosterError] = useState("");
   // Session 7 learning loop
@@ -331,6 +384,73 @@ export default function Home() {
       : view === "mine"
         ? "My RSVPs"
         : "Find a game";
+  const invited = profileReady && typeof location !== "undefined" && !!new URLSearchParams(location.search).get("event");
+  if (!profileReady) return <main className="auth-shell" />;
+  if (!profile)
+    return (
+      <main className="auth-shell">
+        <form
+          className="auth-card"
+          noValidate
+          onSubmit={(ev) => {
+            ev.preventDefault();
+            finishSignup();
+          }}
+        >
+          <div className="brand">courtside<span>↗</span></div>
+          <h1>{signup.mode === "login" ? "Welcome back" : invited ? "Join this game" : "Welcome to CourtSide"}</h1>
+          <p className="auth-sub">{invited ? "Sign up in a few seconds and we'll take you straight to the game." : "Barcelona pickup games, organised without the group chat chaos."}</p>
+          {signup.mode === "signup" && (
+            <>
+              <fieldset className="role-pick">
+                <legend>How will you use CourtSide?</legend>
+                {([
+                  ["player", "I play or watch", "Find games, join, and manage your spots"],
+                  ["organiser", "I organise games", "Create games, manage rosters and reserves"],
+                ] as const).map(([key, label, hint]) => (
+                  <button
+                    type="button"
+                    key={key}
+                    aria-pressed={signup.role === key}
+                    className={signup.role === key ? "role-option chosen" : "role-option"}
+                    onClick={() => setSignup({ ...signup, role: key, error: "" })}
+                  >
+                    <strong>{label}</strong>
+                    <span>{hint}</span>
+                  </button>
+                ))}
+              </fieldset>
+              <label>
+                First name
+                <input autoComplete="given-name" value={signup.name} maxLength={60} onChange={(ev) => setSignup({ ...signup, name: ev.target.value, error: "" })} />
+              </label>
+            </>
+          )}
+          <label>
+            Email
+            <input type="email" inputMode="email" autoComplete="email" value={signup.email} onChange={(ev) => setSignup({ ...signup, email: ev.target.value, error: "" })} />
+          </label>
+          <label>
+            Password
+            <input type="password" autoComplete={signup.mode === "signup" ? "new-password" : "current-password"} value={signup.password} onChange={(ev) => setSignup({ ...signup, password: ev.target.value, error: "" })} />
+          </label>
+          {signup.mode === "signup" && (
+            <label>
+              Confirm password
+              <input type="password" autoComplete="new-password" value={signup.confirm} onChange={(ev) => setSignup({ ...signup, confirm: ev.target.value, error: "" })} />
+            </label>
+          )}
+          {signup.error && <p className="error" role="alert">{signup.error}</p>}
+          <button type="submit" className="auth-submit" disabled={signup.busy}>{signup.busy ? "One moment…" : signup.mode === "signup" ? "Create account" : "Log in"}</button>
+          <p className="auth-fine">
+            {signup.mode === "signup" ? "Already have an account? " : "New to CourtSide? "}
+            <button type="button" className="link-button" onClick={() => setSignup({ ...signup, mode: signup.mode === "signup" ? "login" : "signup", error: "", password: "", confirm: "" })}>
+              {signup.mode === "signup" ? "Log in" : "Create an account"}
+            </button>
+          </p>
+        </form>
+      </main>
+    );
   return (
     <main>
       <header>
@@ -338,11 +458,13 @@ export default function Home() {
           courtside<span>↗</span>
         </Link>
         <nav aria-label="Main navigation">
-          {[
-            ["discover", "Discover"],
-            ["mine", "My RSVPs"],
-            ["organise", "Organise"],
-          ].map(([key, label]) => (
+          {(profile.role === "organiser"
+            ? [["organise", "My games"]]
+            : [
+                ["discover", "Discover"],
+                ["mine", "My RSVPs"],
+              ]
+          ).map(([key, label]) => (
             <button
               className={view === key ? "nav active" : "nav"}
               aria-current={view === key ? "page" : undefined}
@@ -357,17 +479,23 @@ export default function Home() {
               {label}
             </button>
           ))}
-          <a className="nav review-link" href="/review/index.html">Evidence review ↗</a>
+          {profile.role === "organiser" && <a className="nav review-link" href="/review/index.html">Evidence review ↗</a>}
         </nav>
-        <button
-          onClick={() => {
-            setCompose(true);
-            setSelected(null);
-            setError("");
-          }}
-        >
-          Create event <span aria-hidden="true">＋</span>
-        </button>
+        <div className="account">
+          <span className="account-name">{profile.name} · {profile.role === "organiser" ? "Organiser" : "Player"}</span>
+          <button type="button" className="secondary" onClick={logOut}>Log out</button>
+          {profile.role === "organiser" && (
+            <button
+              onClick={() => {
+                setCompose(true);
+                setSelected(null);
+                setError("");
+              }}
+            >
+              Create event <span aria-hidden="true">＋</span>
+            </button>
+          )}
+        </div>
       </header>
       <div className="pilot-bar">
         PRIVATE PILOT{" "}
