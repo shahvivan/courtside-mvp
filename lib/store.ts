@@ -109,7 +109,7 @@ export function validateEvent(data: Record<string, unknown>) {
   )
     throw new Error("Choose an event time in the future.");
   const price = typeof data.price === "string" ? data.price.trim() : "";
-  const bizum = typeof data.bizum === "string" ? data.bizum.trim() : "";
+  const bizum = typeof data.bizum === "string" ? data.bizum.replace(/[-.]/g, " ").replace(/\s+/g, " ").trim() : "";
   if (price.length > 20) throw new Error("Keep the price short, for example €5.");
   if (bizum && !/^[+\d][\d ]{5,19}$/.test(bizum)) throw new Error("Enter a valid Bizum phone number.");
   return {

@@ -262,7 +262,7 @@ export default function Home() {
   }
   const link = (e: SportEvent) => `${location.origin}/?event=${encodeURIComponent(e.id)}`;
   const invite = (e: SportEvent) =>
-    `${sportIcon[e.sport] || ""} ${e.title}\n${when(e.starts)} · ${e.venue}\n${Math.max(0, e.capacity - e.players)} of ${e.capacity} spots left${e.price ? ` · ${e.price} per player` : ""}\nJoin here: ${link(e)}`;
+    `${sportIcon[e.sport] || ""} ${e.title}\n${when(e.starts)} · ${e.venue}\n${Math.max(0, e.capacity - e.players)} of ${e.capacity} spots left${e.price ? ` · ${e.price} per player${e.bizum ? ` (Bizum ${e.bizum})` : ""}` : ""}\nJoin here: ${link(e)}`;
   const nudge = (e: SportEvent) =>
     `Quick check for ${e.title} (${when(e.starts)}): still coming? If you can't make it, tap "I can't make it" here so the next person gets your spot: ${link(e)}`;
   async function sendText(text: string) {
@@ -393,7 +393,7 @@ export default function Home() {
                 </ol>
                 <div className="row center">
                   <button className="btn primary" onClick={() => { setForm(blank); setCompose(true); }}>＋ New game</button>
-                  {events.length === 0 && (
+                  {!events.some((e) => e.mine) && (
                     <button className="btn ghost" disabled={busy} onClick={async () => { if (await action("/api/examples", {})) setNotice("3 sample games added."); }}>Try with sample games</button>
                   )}
                 </div>
@@ -545,7 +545,7 @@ export default function Home() {
               <div className="bar"><span style={{ width: `${Math.min(100, (current.players / current.capacity) * 100)}%` }} /></div>
               <div className="spots-line">
                 <span><strong>{current.players}</strong> of {current.capacity} spots taken</span>
-                <span className="muted">{current.waiting ? `${current.waiting} waiting · ` : ""}{current.spectators ? `${current.spectators} watching` : ""}</span>
+                <span className="muted">{[current.waiting ? `${current.waiting} waiting` : "", current.spectators ? `${current.spectators} watching` : ""].filter(Boolean).join(" · ")}</span>
               </div>
             </div>
             {current.names && (

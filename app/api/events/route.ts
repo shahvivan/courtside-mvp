@@ -170,7 +170,7 @@ export async function PATCH(req: Request) {
         400,
       );
     return response(req, sid, { ok: true });
-  } catch {
-    return response(req, sid, { error: "Invalid request." }, 400);
+  } catch (e) {
+    return response(req, sid, { error: e instanceof Error && !(e instanceof SyntaxError) ? e.message : "Invalid request." }, 400);
   }
 }
