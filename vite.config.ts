@@ -13,14 +13,15 @@ const { d1, r2 } = hostingConfig;
 const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === 'seatbelt';
 
 const localBindingConfig = {
+  name: 'courtside',
   main: 'vinext/server/app-router-entry',
   compatibility_flags: ['nodejs_compat'],
   d1_databases: d1
     ? [
         {
           binding: d1,
-          database_name: 'site-creator-d1',
-          database_id: SITE_CREATOR_PLACEHOLDER_DATABASE_ID,
+          database_name: 'courtside-db',
+          database_id: '90b91fd5-e874-4fb5-a19f-c535865d43af',
         },
       ]
     : [],
@@ -46,7 +47,7 @@ export default defineConfig(async () => {
 
   return {
     css: { postcss: { plugins: [tailwindcss()] } },
-    server: {host:'127.0.0.1',port:3000,strictPort:true,...(isCodexSeatbeltSandbox ? {watch:{useFsEvents:false,usePolling:true}} : {})},
+    server: {host:'127.0.0.1',port:3001,strictPort:true,...(isCodexSeatbeltSandbox ? {watch:{useFsEvents:false,usePolling:true}} : {})},
     plugins: [
       vinext(),
       sites(),

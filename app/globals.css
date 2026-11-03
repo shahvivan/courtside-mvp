@@ -234,7 +234,7 @@ legend { font-weight: 600; font-size: .9rem; margin-bottom: 8px; padding: 0; }
 .invite-game { margin: 0; background: var(--paper); border-radius: 12px; padding: 12px 14px; line-height: 1.5; }
 .confirm { width: 100%; background: var(--red-bg); border-radius: 12px; padding: 12px; text-align: center; }
 .confirm p { margin: 0 0 10px; font-weight: 600; }
-.sheet .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 10; animation: none; }
+.sheet .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 10; animation: none; width: max-content; max-width: calc(100vw - 32px); }
 @media (max-width: 720px) {
   .page-head .btn.small { white-space: nowrap; }
   .organiser .row .btn.grow { flex-basis: 100%; }
