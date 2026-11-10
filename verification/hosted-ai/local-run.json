@@ -1,6 +1,6 @@
 {
   "base": "http://127.0.0.1:3001",
-  "ran": "2026-11-10T07:25:28.374383Z",
+  "ran": "2026-11-10T07:32:10.815558Z",
   "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
   "checks": {
     "anonymous_403": 403,
@@ -21,7 +21,7 @@
       },
       "status": 200,
       "response": {
-        "description": "Beach volleyball is at Harbour sand court. Players and spectators are welcome. A relaxed practice session is planned. Check details with the organiser before attending.",
+        "description": "Beach volleyball is at Harbour sand court. Players and spectators are welcome. A relaxed practice session is planned. Check with the organiser for details.",
         "provider": "Cloudflare Workers AI · Llama 3.3 70B",
         "reviewRequired": true
       }
@@ -37,7 +37,7 @@
       },
       "status": 200,
       "response": {
-        "description": "Padel is at Cedar court. All players and spectators are welcome. Drills may include volleys and controlled rallies. Check with the organiser for details.",
+        "description": "Padel is played at Cedar court. All players and spectators are welcome. Drills may include volleys and controlled rallies. Check with the organiser for details.",
         "provider": "Cloudflare Workers AI · Llama 3.3 70B",
         "reviewRequired": true
       }
@@ -53,7 +53,7 @@
       },
       "status": 200,
       "response": {
-        "description": "Basketball is at Oak outdoor court. Players and spectators are welcome. Details are not yet confirmed. Check with the organiser for details.",
+        "description": "Basketball is at Oak outdoor court. Players and spectators are welcome. Details are not yet confirmed. Check with the organiser for more information.",
         "provider": "Cloudflare Workers AI · Llama 3.3 70B",
         "reviewRequired": true
       }
@@ -69,7 +69,7 @@
       },
       "status": 200,
       "response": {
-        "description": "Beach tennis is at Dune court. Players and spectators are welcome. It is not confirmed if people will definitely join in. Check with the organiser for details.",
+        "description": "Beach tennis is at Dune court. Players and spectators are welcome. It is not confirmed if spectators must participate. Check with the organiser for details.",
         "provider": "Cloudflare Workers AI · Llama 3.3 70B",
         "reviewRequired": true
       }
@@ -85,7 +85,7 @@
       },
       "status": 200,
       "response": {
-        "description": "Basketball is at Plaza court. Players and spectators are welcome. Practical details are not yet confirmed. Check with the organiser for details.",
+        "description": "Basketball is played at Plaza court. Players and spectators are welcome. Practical details are not yet confirmed. Check with the organiser for details before attending.",
         "provider": "Cloudflare Workers AI · Llama 3.3 70B",
         "reviewRequired": true
       }
@@ -101,7 +101,7 @@
       },
       "status": 200,
       "response": {
-        "description": "Padel is played at Pine court. All players and spectators are welcome. Practical details are not yet confirmed. Check with the organiser for more information.",
+        "description": "Padel is played at Pine court. Players and spectators are welcome. Practical details are not yet confirmed. Check with the organiser for details.",
         "provider": "Cloudflare Workers AI · Llama 3.3 70B",
         "reviewRequired": true
       }
@@ -133,7 +133,7 @@
       },
       "status": 200,
       "response": {
-        "description": "Beach tennis is at Pebble court. Players and spectators are welcome. No equipment is provided. Check details with the organiser.",
+        "description": "Beach tennis is at Pebble court. Players and spectators are welcome. No equipment is provided. Check with the organiser for details.",
         "provider": "Cloudflare Workers AI · Llama 3.3 70B",
         "reviewRequired": true
       }
@@ -243,7 +243,7 @@
       },
       "status": 200,
       "response": {
-        "description": "Beach volleyball at South sand court. Welcome players and spectators. Practical details are not yet confirmed. Check with the organiser for details.",
+        "description": "Beach volleyball at South sand court. \nWelcome players and spectators. \nPractical details are not yet confirmed. \nCheck with the organiser for details.",
         "provider": "Cloudflare Workers AI · Llama 3.3 70B",
         "reviewRequired": true
       }

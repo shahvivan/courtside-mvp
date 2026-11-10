@@ -14,6 +14,9 @@ export async function database() {
       `CREATE INDEX IF NOT EXISTS idx_rsvp_event_role_state ON rsvps(event,role,state)`,
     ),
     db.prepare(
+      `CREATE TABLE IF NOT EXISTS ai_usage (sid TEXT NOT NULL, day TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (sid, day))`,
+    ),
+    db.prepare(
       `CREATE TABLE IF NOT EXISTS participant_metadata (rsvp INTEGER PRIMARY KEY, name TEXT NOT NULL, paid INTEGER NOT NULL DEFAULT 0 CHECK(paid IN (0,1)))`,
     ),
   ]);

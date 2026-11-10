@@ -33,6 +33,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [aiBusy, setAiBusy] = useState(false);
   const [aiUndo, setAiUndo] = useState<string | null>(null);
+  const aiRequest = useRef(0);
   const [loaded, setLoaded] = useState(false);
   const [share, setShare] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
@@ -198,7 +199,13 @@ export default function Home() {
       setBusy(false);
     }
   }
+  function resetAi() {
+    aiRequest.current++;
+    setAiUndo(null);
+    setAiBusy(false);
+  }
   function close() {
+    resetAi();
     setSelected(null);
     setCompose(false);
     setShare("");
@@ -224,19 +231,23 @@ export default function Home() {
   }
   async function aiDraft() {
     if (form.venue.trim().length < 3) return setError("Add where you'll play first, then the AI can write the notes.");
+    const request = ++aiRequest.current;
+    const before = form.description;
     setAiBusy(true);
     setError("");
     try {
-      const r = await fetch("/api/assist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: form.title.trim() || `${form.sport} game`, sport: form.sport, venue: form.venue, description: form.description }) });
+      const r = await fetch("/api/assist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: form.title.trim().length >= 3 ? form.title.trim() : `${form.sport} game`, sport: form.sport, venue: form.venue, description: before }) });
       const result = (await r.json()) as { error?: string; description?: string };
+      if (request !== aiRequest.current) return;
       if (!r.ok || !result.description) throw new Error(result.error || "The AI couldn't write a draft.");
-      setAiUndo(form.description);
-      setForm({ ...form, description: result.description });
+      const draft = result.description;
+      setAiUndo(before);
+      setForm((f) => ({ ...f, description: draft }));
       setNotice("AI draft added. Read it and edit before saving.");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "The AI couldn't write a draft.");
+      if (request === aiRequest.current) setError(e instanceof Error ? e.message : "The AI couldn't write a draft.");
     } finally {
-      setAiBusy(false);
+      if (request === aiRequest.current) setAiBusy(false);
     }
   }
   function payload(f: typeof blank) {
@@ -265,7 +276,7 @@ export default function Home() {
     setEditing(null);
     setSuggestion(null);
     setChoice(null);
-    setForm(blank); setAiUndo(null);
+    setForm(blank); resetAi();
     setView("organise");
     setSelected(id);
     setNotice(editing ? "Changes saved." : "Your game is live. Share the link with your players.");
@@ -363,7 +374,7 @@ export default function Home() {
         </nav>
         <div className="topbar-right">
           {isOrganiser && (
-            <button className="btn primary hide-mobile" onClick={() => { setForm(blank); setAiUndo(null); setEditing(null); setCompose(true); setSelected(null); setError(""); }}>＋ New game</button>
+            <button className="btn primary hide-mobile" onClick={() => { setForm(blank); resetAi(); setEditing(null); setCompose(true); setSelected(null); setError(""); }}>＋ New game</button>
           )}
           <div className="account">
             <button className="avatar" aria-haspopup="menu" aria-expanded={menu} aria-label={`Account menu for ${profile.name}`} onClick={() => setMenu(!menu)}>{profile.name.slice(0, 1).toUpperCase()}</button>
@@ -411,7 +422,7 @@ export default function Home() {
                   <li><b>3</b>See who&apos;s in, who&apos;s waiting and who has paid</li>
                 </ol>
                 <div className="row center">
-                  <button className="btn primary" onClick={() => { setForm(blank); setAiUndo(null); setCompose(true); }}>＋ New game</button>
+                  <button className="btn primary" onClick={() => { setForm(blank); resetAi(); setCompose(true); }}>＋ New game</button>
                   {!events.some((e) => e.mine) && (
                     <button className="btn ghost" disabled={busy} onClick={async () => { if (await action("/api/examples", {})) setNotice("3 sample games added."); }}>Try with sample games</button>
                   )}
@@ -494,7 +505,7 @@ export default function Home() {
         {tabs.map(([key, label, icon]) => (
           <button key={key} className={view === key ? "active" : ""} aria-current={view === key ? "page" : undefined} onClick={() => setView(key)}><span aria-hidden="true">{icon}</span>{label}</button>
         ))}
-        {isOrganiser && <button className="new" onClick={() => { setForm(blank); setAiUndo(null); setEditing(null); setCompose(true); setSelected(null); }}><span aria-hidden="true">＋</span>New game</button>}
+        {isOrganiser && <button className="new" onClick={() => { setForm(blank); resetAi(); setEditing(null); setCompose(true); setSelected(null); }}><span aria-hidden="true">＋</span>New game</button>}
       </nav>
 
       {notice && !compose && !selected && <div className="toast" role="status" aria-live="polite">{notice}</div>}
@@ -527,10 +538,10 @@ export default function Home() {
               <label><span className="lbl">Your Bizum number <span className="opt">optional</span></span><input inputMode="tel" maxLength={20} value={form.bizum} placeholder="e.g. 612 345 678" onChange={(e) => setForm({ ...form, bizum: e.target.value })} /></label>
             )}
             <label><span className="lbl">Game name <span className="opt">optional</span></span><input maxLength={100} value={form.title} placeholder={`${form.sport} game`} onChange={(e) => setForm({ ...form, title: e.target.value })} /></label>
-            <label><span className="lbl">Notes for players <span className="opt">optional</span></span><textarea rows={3} maxLength={2000} value={form.description} placeholder="Level, what to bring, where exactly to meet" onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
+            <label><span className="lbl">Notes for players <span className="opt">optional</span></span><textarea rows={3} maxLength={2000} disabled={aiBusy} value={form.description} placeholder="Level, what to bring, where exactly to meet" onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
             <div className="ai-row">
               <button type="button" className="btn ghost small" disabled={aiBusy || busy} onClick={aiDraft}>{aiBusy ? "Writing…" : "✨ Write with AI"}</button>
-              {aiUndo !== null && <button type="button" className="link small" onClick={() => { setForm({ ...form, description: aiUndo }); setAiUndo(null); }}>Undo</button>}
+              {aiUndo !== null && <button type="button" className="link small" onClick={() => { setForm((f) => ({ ...f, description: aiUndo })); setAiUndo(null); }}>Undo</button>}
               <span className="muted ai-note">{aiUndo !== null ? "AI draft. Check every detail before saving." : "Uses your sport, place and notes. Nothing is saved until you do."}</span>
             </div>
             {suggestion && !suggestion.off && suggestion.ready && (
@@ -546,7 +557,7 @@ export default function Home() {
               </div>
             )}
             {error && <p role="alert" className="form-error">{error}</p>}
-            <button className="btn primary block" disabled={busy} type="submit">{busy ? "Saving…" : editing ? "Save changes" : "Create game"}</button>
+            <button className="btn primary block" disabled={busy || aiBusy} type="submit">{busy ? "Saving…" : editing ? "Save changes" : "Create game"}</button>
           </form>
         ) : current ? (
           <div className="detail">
@@ -680,7 +691,7 @@ export default function Home() {
                     <button className="btn ghost small" onClick={() => {
                       setShare("");
                       setEditing(current.id);
-                      setAiUndo(null); setForm({ title: current.title, sport: current.sport, venue: current.venue, starts: toLocalInput(current.starts), capacity: current.capacity, description: current.description, price: current.price || "", bizum: current.bizum || "" });
+                      resetAi(); setForm({ title: current.title, sport: current.sport, venue: current.venue, starts: toLocalInput(current.starts), capacity: current.capacity, description: current.description, price: current.price || "", bizum: current.bizum || "" });
                       setSelected(null);
                       setCompose(true);
                     }}>✏️ Edit</button>
