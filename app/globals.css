@@ -180,6 +180,8 @@ legend { font-weight: 600; font-size: .9rem; margin-bottom: 8px; padding: 0; }
 .stepper button { border: 0; background: var(--paper); font-size: 1.2rem; cursor: pointer; }
 .stepper input { border: 0; border-radius: 0; text-align: center; -moz-appearance: textfield; }
 .stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.ai-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: -4px; }
+.ai-note { font-size: .82rem; flex: 1 1 180px; }
 .hint-card { background: #f7fbe9; border: 1px solid #dfeeb0; border-radius: 14px; padding: 14px; display: grid; gap: 8px; }
 .hint-card p { margin: 0; font-size: .9rem; }
 .mini { width: 80px; padding: 8px; }
