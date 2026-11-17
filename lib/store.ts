@@ -72,9 +72,11 @@ export function participantName(value: unknown): string {
 }
 export const sports = [
   "Beach volleyball",
-  "Padel",
+  "Beach padel",
   "Basketball",
   "Beach tennis",
+  // Legacy label: games created before 17 Nov 2026 were saved as "Padel".
+  "Padel",
 ];
 export function validateEvent(data: Record<string, unknown>) {
   for (const [field, min, max] of [

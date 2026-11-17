@@ -18,9 +18,9 @@ export async function POST(req: Request) {
     ],
     [
       "padel",
-      "The friendly americana",
-      "Padel",
-      "Poblenou · court to confirm",
+      "Beach padel americana",
+      "Beach padel",
+      "Bogatell beach · court to confirm",
       8,
       "Rotate partners, meet new people and practise together. This example has no court booking and does not collect payments.",
       "Spectators welcome in this example. Access requires organiser confirmation.",

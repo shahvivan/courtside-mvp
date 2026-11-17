@@ -1,26 +1,28 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Archivo, Public_Sans } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Archivo (with its width axis) for headings and numbers, Public Sans for reading text.
+const display = Archivo({
+  variable: "--font-display",
   subsets: ["latin"],
+  axes: ["wdth"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const body = Public_Sans({
+  variable: "--font-body",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
   title: "CourtSide · Pickup games in Barcelona",
   description:
-    "Find a pickup game in Barcelona or organise your own: padel, beach volleyball, basketball.",
+    "The home for niche sports games in Barcelona: beach volley, beach padel and street basketball. Find a game or organise your own.",
   metadataBase: new URL("https://courtside.courtsidebcn.workers.dev"),
   openGraph: {
     title: "CourtSide · Join the game",
     description:
-      "Pickup padel, beach volleyball and basketball in Barcelona. Tap to grab a spot.",
+      "Beach volley, beach padel and street basketball games in Barcelona. Tap to grab a spot.",
     images: ["/og.png"],
   },
   twitter: {
@@ -38,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${display.variable} ${body.variable} antialiased`}
       >
         {children}
       </body>

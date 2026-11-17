@@ -1,0 +1,596 @@
+{
+ "@cf/meta/llama-3.3-70b-instruct-fp8-fast": [
+  [
+   "N01",
+   1.0,
+   "Beach volleyball is at Harbour sand court. Players and spectators are welcome. A relaxed practice session is planned. Check with the organiser for details.",
+   {
+    "prompt_tokens": 297,
+    "completion_tokens": 31,
+    "total_tokens": 328,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 14.269262313842773
+   }
+  ],
+  [
+   "N02",
+   1.2,
+   "Padel is at Cedar court. All players and spectators are welcome. Drills may include volleys and controlled rallies. Check with the organiser for details.",
+   {
+    "prompt_tokens": 306,
+    "completion_tokens": 33,
+    "total_tokens": 339,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 14.918882369995117
+   }
+  ],
+  [
+   "N03",
+   1.0,
+   "Basketball is at Oak outdoor court. Players and spectators are welcome. Details are not yet confirmed. Check with the organiser for details.",
+   {
+    "prompt_tokens": 296,
+    "completion_tokens": 29,
+    "total_tokens": 325,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 13.832984924316406
+   }
+  ],
+  [
+   "N04",
+   1.0,
+   "Beach tennis is at Dune court. Players and spectators are welcome. Practical details are not yet confirmed. Check with the organiser for details.",
+   {
+    "prompt_tokens": 304,
+    "completion_tokens": 31,
+    "total_tokens": 335,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 14.455936431884766
+   }
+  ],
+  [
+   "N05",
+   1.1,
+   "Basketball is at Plaza court. Players and spectators are welcome. Practical details are not yet confirmed. Check with the organiser for details.",
+   {
+    "prompt_tokens": 316,
+    "completion_tokens": 29,
+    "total_tokens": 345,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 14.366338729858398
+   }
+  ],
+  [
+   "N06",
+   1.1,
+   "Padel is played at Pine court. Players and spectators are welcome. Practical details are not yet confirmed. Check with the organiser for details.",
+   {
+    "prompt_tokens": 290,
+    "completion_tokens": 30,
+    "total_tokens": 320,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 13.87778377532959
+   }
+  ],
+  [
+   "N07",
+   0.8,
+   "Beach volleyball is at West sand court. Players and spectators are welcome. Step-free access has not been confirmed. Check with the organiser for details.",
+   {
+    "prompt_tokens": 307,
+    "completion_tokens": 32,
+    "total_tokens": 339,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 14.740745544433594
+   }
+  ],
+  [
+   "N08",
+   0.9,
+   "Beach tennis is at Pebble court. Players and spectators are welcome. No equipment is provided. Check with the organiser for details.",
+   {
+    "prompt_tokens": 309,
+    "completion_tokens": 29,
+    "total_tokens": 338,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 14.179664611816406
+   }
+  ],
+  [
+   "N10",
+   3.1,
+   "Basketball is at Maple court. Players and watchers are welcome. The court is not booked. Check with the organiser for details.",
+   {
+    "prompt_tokens": 308,
+    "completion_tokens": 28,
+    "total_tokens": 336,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 13.948190689086914
+   }
+  ],
+  [
+   "A01",
+   1.2,
+   "Padel at Birch court. Welcome players and spectators. Practical details are not yet confirmed. Check with the organiser for details.",
+   {
+    "prompt_tokens": 312,
+    "completion_tokens": 27,
+    "total_tokens": 339,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 13.850055694580078
+   }
+  ],
+  [
+   "A02",
+   1.3,
+   "Basketball is at River court. Players and spectators are welcome. Practical details are not yet confirmed. Check with the organiser for more information.",
+   {
+    "prompt_tokens": 338,
+    "completion_tokens": 30,
+    "total_tokens": 368,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 15.157831192016602
+   }
+  ],
+  [
+   "A03",
+   1.0,
+   "Beach tennis is at Lagoon court. Players and spectators are welcome. Practical details are not yet confirmed. Check with the organiser for details.",
+   {
+    "prompt_tokens": 312,
+    "completion_tokens": 31,
+    "total_tokens": 343,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 14.66927719116211
+   }
+  ],
+  [
+   "A04",
+   1.1,
+   "Basketball is at Hill court. Players and spectators are welcome. Practical details are not yet confirmed. Check with the organiser for more information.",
+   {
+    "prompt_tokens": 334,
+    "completion_tokens": 30,
+    "total_tokens": 364,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 15.05116081237793
+   }
+  ],
+  [
+   "A05",
+   1.0,
+   "Beach volleyball at South sand court. Welcome players and spectators. Practical details are not yet confirmed. Check with the organiser for details.",
+   {
+    "prompt_tokens": 330,
+    "completion_tokens": 29,
+    "total_tokens": 359,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 14.73968505859375
+   }
+  ]
+ ],
+ "@cf/mistralai/mistral-small-3.1-24b-instruct": [
+  [
+   "N01",
+   1.1,
+   "Beach volleyball is played at the Harbour sand court. Players and spectators are welcome. This is a relaxed practice session. Check with the organiser for details before attending.",
+   {
+    "prompt_tokens": 271,
+    "completion_tokens": 34,
+    "total_tokens": 305,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 10.354988098144531
+   }
+  ],
+  [
+   "N02",
+   1.1,
+   "Padel is the sport at Cedar court. Players and spectators are welcome. Drills on volleys and controlled rallies may be included. Check practical details with the organiser before attending.",
+   {
+    "prompt_tokens": 284,
+    "completion_tokens": 38,
+    "total_tokens": 322,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 10.971327781677246
+   }
+  ],
+  [
+   "N03",
+   1.6,
+   "Basketball is played at Oak outdoor court. Players and spectators are welcome. Practical details are not yet confirmed. Check with the organiser before attending.",
+   {
+    "prompt_tokens": 272,
+    "completion_tokens": 30,
+    "total_tokens": 302,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 10.18491268157959
+   }
+  ],
+  [
+   "N04",
+   1.2,
+   "Beach tennis is played at the Dune court. All are welcome to play or simply enjoy the action. There is no obligation to participate. Please check practical details with the organiser before attending.",
+   {
+    "prompt_tokens": 278,
+    "completion_tokens": 40,
+    "total_tokens": 318,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 10.881048202514648
+   }
+  ],
+  [
+   "N05",
+   1.1,
+   "Basketball takes place at Plaza court. Players and spectators are welcome. Whether spectators can join in is not yet confirmed. Check with the organiser for more practical details before attending.",
+   {
+    "prompt_tokens": 294,
+    "completion_tokens": 36,
+    "total_tokens": 330,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 11.189112663269043
+   }
+  ],
+  [
+   "N06",
+   1.8,
+   "Welcome to Padel at Pine court. Players and spectators are invited to enjoy the evening rallies. The exact timing of the event may not be finalised. Please confirm practical details with the organiser before attending.",
+   {
+    "prompt_tokens": 265,
+    "completion_tokens": 43,
+    "total_tokens": 308,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 10.618124961853027
+   }
+  ],
+  [
+   "N07",
+   1.0,
+   "Beach volleyball is happening at West sand court. Players and spectators are welcome to enjoy the action. Step-free access has not been confirmed. Please check with the organiser for practical details before attending.",
+   {
+    "prompt_tokens": 281,
+    "completion_tokens": 40,
+    "total_tokens": 321,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 10.976675987243652
+   }
+  ],
+  [
+   "N08",
+   2.0,
+   "Beach tennis is played on the Pebble court. Welcome to players and spectators. Equipment is not provided, so players should bring their own. Check with the organiser for more practical details before attending.",
+   {
+    "prompt_tokens": 284,
+    "completion_tokens": 42,
+    "total_tokens": 326,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 11.173279762268066
+   }
+  ],
+  [
+   "N10",
+   1.7,
+   "Basketball is the sport at Maple court. Players and spectators are welcome. The court might not be booked. Confirm availability with the organiser before attending.",
+   {
+    "prompt_tokens": 283,
+    "completion_tokens": 31,
+    "total_tokens": 314,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 10.586036682128906
+   }
+  ],
+  [
+   "A01",
+   1.4,
+   "Padel is played at Birch court. Welcome to players and spectators. The event may or may not feature a social gathering afterwards. Check practical details with the organiser before attending.",
+   {
+    "prompt_tokens": 289,
+    "completion_tokens": 37,
+    "total_tokens": 326,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 11.080221176147461
+   }
+  ],
+  [
+   "A02",
+   1.1,
+   "Basketball is played at River court. Players and spectators are welcome. The event may or may not include drills. Check practical details with the organiser before attending.",
+   {
+    "prompt_tokens": 312,
+    "completion_tokens": 34,
+    "total_tokens": 346,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 11.661904335021973
+   }
+  ],
+  [
+   "A03",
+   0.9,
+   "Beach tennis is played at Lagoon court. Players and spectators are welcome. The exact number of courts is not yet confirmed. Please check practical details with the organiser before attending.",
+   {
+    "prompt_tokens": 290,
+    "completion_tokens": 37,
+    "total_tokens": 327,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 11.112096786499023
+   }
+  ],
+  [
+   "A04",
+   1.2,
+   "Basketball will be played at Hill Court. Welcome to all players and spectators. It is not yet confirmed if all players will attend. Please check practical details with the organiser before attending.",
+   {
+    "prompt_tokens": 308,
+    "completion_tokens": 38,
+    "total_tokens": 346,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 11.73635196685791
+   }
+  ],
+  [
+   "A05",
+   1.4,
+   "Beach volleyball is played at the South sand court. Welcome to all players and spectators. The exact timing of the sunset is not yet confirmed. Check the organiser for missing practical details before attending.",
+   {
+    "prompt_tokens": 304,
+    "completion_tokens": 40,
+    "total_tokens": 344,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 11.709824562072754
+   }
+  ]
+ ],
+ "@cf/google/gemma-4-26b-a4b-it": [
+  [
+   "N01",
+   4.1,
+   "null",
+   {
+    "prompt_tokens": 279,
+    "completion_tokens": 400,
+    "total_tokens": 679,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 13.445454597473145
+   }
+  ],
+  [
+   "N02",
+   7.4,
+   "null",
+   {
+    "prompt_tokens": 287,
+    "completion_tokens": 400,
+    "total_tokens": 687,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 13.518181800842285
+   }
+  ],
+  [
+   "N03",
+   3.4,
+   "null",
+   {
+    "prompt_tokens": 278,
+    "completion_tokens": 400,
+    "total_tokens": 678,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 13.436363220214844
+   }
+  ],
+  [
+   "N04",
+   8.2,
+   "null",
+   {
+    "prompt_tokens": 285,
+    "completion_tokens": 400,
+    "total_tokens": 685,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 13.5
+   }
+  ],
+  [
+   "N05",
+   2.5,
+   "null",
+   {
+    "prompt_tokens": 304,
+    "completion_tokens": 400,
+    "total_tokens": 704,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 13.672727584838867
+   }
+  ],
+  [
+   "N06",
+   8.9,
+   "null",
+   {
+    "prompt_tokens": 269,
+    "completion_tokens": 400,
+    "total_tokens": 669,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 13.354545593261719
+   }
+  ],
+  [
+   "N07",
+   9.3,
+   "null",
+   {
+    "prompt_tokens": 288,
+    "completion_tokens": 400,
+    "total_tokens": 688,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 13.527273178100586
+   }
+  ],
+  [
+   "N08",
+   7.8,
+   "null",
+   {
+    "prompt_tokens": 290,
+    "completion_tokens": 400,
+    "total_tokens": 690,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 13.545454025268555
+   }
+  ],
+  [
+   "N10",
+   8.8,
+   "null",
+   {
+    "prompt_tokens": 288,
+    "completion_tokens": 400,
+    "total_tokens": 688,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 13.527273178100586
+   }
+  ],
+  [
+   "A01",
+   9.0,
+   "null",
+   {
+    "prompt_tokens": 296,
+    "completion_tokens": 400,
+    "total_tokens": 696,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 13.600000381469727
+   }
+  ],
+  [
+   "A02",
+   7.9,
+   "null",
+   {
+    "prompt_tokens": 316,
+    "completion_tokens": 400,
+    "total_tokens": 716,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 13.781818389892578
+   }
+  ],
+  [
+   "A03",
+   6.9,
+   "null",
+   {
+    "prompt_tokens": 292,
+    "completion_tokens": 400,
+    "total_tokens": 692,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 13.563636779785156
+   }
+  ],
+  [
+   "A04",
+   2.8,
+   "null",
+   {
+    "prompt_tokens": 314,
+    "completion_tokens": 400,
+    "total_tokens": 714,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 13.763636589050293
+   }
+  ],
+  [
+   "A05",
+   7.9,
+   "null",
+   {
+    "prompt_tokens": 310,
+    "completion_tokens": 400,
+    "total_tokens": 710,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "neurons": 13.727272987365723
+   }
+  ]
+ ]
+}
