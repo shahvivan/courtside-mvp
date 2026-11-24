@@ -1,73 +1,151 @@
 # CourtSide
 
-One project for Vivan and Maximilian: discover a game, join to play or watch, manage confirmations and track whether players have paid the organiser. CourtSide does not collect or move money.
+**Pickup games for niche sports in Barcelona, built so a late drop out never kills a game.**
 
-## Start here
+Organisers of beach volley, beach padel and other small games post a game, players join, and when someone cancels the first person on the waitlist moves up automatically. Built by Vivan Shah and Maximilian von Maillot de la Treille for ESADE's *Launching AI Native Ventures* (2026).
 
-Requires Node.js 22.13 or newer and npm. No paid API key or cloud account is needed locally.
+**Live app:** https://courtside.courtsidebcn.workers.dev
+
+> Status: early pilot. The app is live, but demand is not yet proven: one real game has been listed and one real player has signed up.
+
+---
+
+## Contents
+
+- [What it does](#what-it-does)
+- [How it works](#how-it-works)
+- [Where AI is used, and where it is not](#where-ai-is-used-and-where-it-is-not)
+- [Evaluation and safety work](#evaluation-and-safety-work)
+- [Run it locally](#run-it-locally)
+- [Checks](#checks)
+- [Repository map](#repository-map-current-version)
+- [Branches](#branches)
+- [How it was built](#how-it-was-built)
+
+---
+
+## What it does
+
+| For organisers | For players |
+| --- | --- |
+| Create a game: sport, venue, time, price, player limit | Browse open games and join to play or watch |
+| See who is in, who is waiting and who has paid | Cancel with one tap; your spot goes to the next person |
+| Repeat a game weekly | See your place or waitlist position |
+| Optional AI draft of the game notes, which you edit and approve | |
+| Reserves suggestion based on past drop outs (after 3 finished games) | |
+
+CourtSide never collects or moves money. "Paid" is a note the organiser sets, not a payment record.
+
+## How it works
+
+```mermaid
+flowchart LR
+  U[Browser] --> W[Cloudflare Worker<br/>Next.js App Router via vinext]
+  W --> D[(Cloudflare D1<br/>SQLite via Drizzle)]
+  W -->|organiser asks for a draft| AI[Workers AI<br/>Llama 3.3 70B]
+  AI --> G{Output check}
+  G -->|passes| O[Draft shown to organiser<br/>to edit and save]
+  G -->|fails| X[Rejected, notes unchanged]
+```
+
+| Layer | Choice |
+| --- | --- |
+| Framework | Next.js App Router, built with vinext on Vite |
+| Hosting | Cloudflare Workers |
+| Database | Cloudflare D1 (SQLite), schema with Drizzle ORM |
+| AI | Cloudflare Workers AI, `@cf/meta/llama-3.3-70b-instruct-fp8-fast` |
+| Accounts | Sign up and log in with organiser and player roles, checked on the server |
+
+## Where AI is used, and where it is not
+
+| Process | AI? | Why |
+| --- | --- | --- |
+| Drafting game notes | Yes, AI assisted | The model drafts, the organiser edits and saves. It cannot publish anything. |
+| Moving the waitlist up | No, a plain rule | It must be instant, exact and fair. |
+| Reserves suggestion | No, a plain rate | Drop out rate per organiser, sport and time slot. Silent until 3 finished games; a shift of about 10 points goes to a person for review. |
+| Building and testing the product | Yes, AI coding agents | A person approves every release. |
+
+**Guardrails on the AI step** (`app/api/assist/route.ts`)
+
+- The organiser's text is treated as data, never as instructions.
+- A code check rejects drafts with HTML, links, email addresses, or wording that ranks, flags or bans people on attendance.
+- 20 drafts per organiser per day and 150 for the whole app, with a 20 second timeout.
+- If the model fails or times out, the organiser's notes stay as they were.
+
+**Red line:** CourtSide never scores, ranks or bans an individual player for attendance. `verification/no-individual-scoring.mjs` tests this.
+
+## Evaluation and safety work
+
+| Experiment | Setup | Result |
+| --- | --- | --- |
+| Error analysis on a small local model | 15 cases (10 normal, 5 attacks), locked before the first run. Qwen 2.5 3B via Ollama. Every failure traced to a pipeline step. | All first failures came from one step. Fixing that step: normal cases 1/10 → 6/10, attacks resisted 2/5 → 3/5. |
+| Hosted model comparison | Same cases on three Workers AI models (14 runnable; the app refuses the no venue case itself) | Gemma 4 26B answered 0/14. Mistral Small 24B resisted 5/5 attacks but invented details. Llama 3.3 70B resisted 5/5 and invented nothing, so it runs in production. Raw results: `verification/hosted-ai/`. |
+| LLM judge | Llama 3.3 70B grading answers, three prompt versions, 12 cases we marked ourselves and kept out of its prompt | Best version agreed on 8/12 (always answering "pass" scores 6/12) and caught only 2 of 6 real failures. It does not gate anything. |
+| Copycat test | A fresh agent got one screenshot and a short description | A running copy of the visible screens in about 4 minutes, with the allocation logic faked. |
+
+Known limits: each case ran once, so run to run variation is unmeasured, and Llama's drafts are shorter (20 to 24 words) than our 40 to 70 word target.
+
+## Run it locally
+
+Requires Node.js 22.13 or newer.
 
 ```sh
 git clone https://github.com/shahvivan/courtside-mvp.git
 cd courtside-mvp
+git switch feature/website-redesign   # the current version
 npm ci
 npm run dev
 ```
 
-Open **http://localhost:3000**. After installing dependencies, macOS users can also double-click `Start Courtside.command`. Keep the terminal running. If port 3000 is occupied, run `npm run dev -- --port 3001` and open http://localhost:3001.
+Open http://localhost:3000. On macOS you can also double click `Start Courtside.command` after `npm ci`.
 
-## Find your way around
+The AI helper needs a Workers AI binding. Without it, organisers write notes by hand and everything else works.
 
-| Area | What to do |
-| --- | --- |
-| Discover | Load fictional sample events, find a game, enter a first name, join to play or watch. |
-| My RSVPs | Check your place or waitlist position. Use “I can't make it” to cancel; the earliest waiting player moves up automatically. |
-| Organise | Create, edit and publish reviewed event drafts. Open your event to see its roster and mark confirmed players paid or unpaid. |
-| Evidence review | Inspect the separate Session 4/5 synthetic fixture, record reasons, export review history, then return to games. |
-
-Paid flags are organiser-entered notes about the current registration, not bank receipts or an accounting ledger. Cancellation clears the flag; rejoining starts unpaid and requires the organiser to recheck any prior payment. No money is refunded or moved by these actions. Keep external payment records separately.
-
-## Two-person demo
-
-1. Create and publish a fictional event with one player place.
-2. In another browser profile/private window at the same address, enter a fictional first name and join to play.
-3. Use a third browser session to join the waitlist. Cancel the first player's place; refresh the waiting browser to confirm promotion.
-4. In the organiser's browser, mark the confirmed player paid. Refresh the participant view to see the updated note.
-5. Open Evidence review. Its fictional payments and local review notes do not change the event database.
-
-## Working together
-
-GitHub is the shared source of truth. Pull before starting, use a feature branch and open a pull request so your partner can review changes. Do not force-push or commit environment files, database state or dependencies.
-
-```sh
-git pull --ff-only
-git switch -c feature/your-change
-```
-
-GitHub shares **code, not running event data**. Each laptop's local database is separate. A localhost invitation works only on the laptop running it. A shared hosted app requires separate approval and a security/authentication upgrade. This repository update is not a deployment; the dev server listens only on loopback.
-
-## What was combined
-
-The original React/Vinext event app remains the entry point. Later standalone signup ideas now use its database-backed flows: names, cancellation, FIFO waitlist promotion and owner-only paid/unpaid notes. The original Session 4/5 evidence tool remains at `/review/index.html`, explicitly separate from the event roster. Classroom handouts were not changed.
-
-## Data and limits
-
-Records persist in local D1 SQLite under `.wrangler/pilot-state`. An anonymous HttpOnly cookie controls access, not a verified account. Clearing cookies loses management access. Use fictional first names and sample data. No venue reservations, attendance verification, customer validation or verified payment evidence are claimed.
-
-Evidence-review notes use browser localStorage, not D1 or a production audit trail. They do not synchronise across devices.
-
-AI description assistance is optional: local Ollama with `qwen2.5:3b`. If unavailable, the labelled template/manual editing still works. Review all AI wording. AI cannot publish, contact people or handle money; only event draft facts, not attendee names, go to the model.
-
-This is a local prototype, not production-ready software. Do not expose the dev server or Ollama to the internet. Prior toolchain advisories and anonymous identity require review before deployment. See `verification/unified-integration.md` for current checks and limits.
-
-## Checks and structure
+## Checks
 
 ```sh
 npm run lint
 npx tsc --noEmit
 npm run build
-node public/review/test.cjs
-# With a local server running; creates fictional test events:
+
+# With the dev server running (these create fictional test data):
 node verification/integration-api.mjs http://127.0.0.1:3000
+node verification/learning-loop.mjs http://127.0.0.1:3000
+node verification/no-individual-scoring.mjs http://127.0.0.1:3000
 ```
 
-`app/`: UI and API. `lib/`: data helpers/types. `db/` and `drizzle/`: schema. `public/review/`: evidence fixture. See `architecturedoc.md`, `SCOPE.md`, and `verification/`. September verification files are historical, not a claim about this integration.
+## Repository map (current version)
+
+```
+app/
+  page.tsx                 the whole UI
+  api/
+    account/               sign up, log in, roles
+    events/                create, edit, repeat and finish games
+    rsvp/  participants/   joining, cancelling, waitlist, paid notes
+    assist/                AI draft of game notes, with guardrails
+    learning/              reserves suggestion and review list
+lib/
+  store.ts                 database access
+  learning.ts              drop out rates and the 3 game threshold
+db/  drizzle/              schema and migrations
+verification/              API, learning loop, red line and model tests
+architecturedoc.md         architecture and decisions, per course session
+AI_ORCHESTRATION_LOG.md    prompts and decisions behind the build
+SCOPE.md                   what is in and out of scope
+```
+
+## Branches
+
+| Branch | What it holds |
+| --- | --- |
+| `feature/website-redesign` | **Current version**, the one that is live |
+| `feature/auth-roles` | Sign up and roles, merged into the current version |
+| `feature/session7-learning-loop` | Learning loop for reserves suggestions |
+| `main` | Session 6 local prototype |
+
+## How it was built
+
+CourtSide was built by directing AI coding agents, with separate agents reviewing and attacking the work, and with us approving every release. The course requires a full log of prompts, outputs and human decisions; ours is in `AI_ORCHESTRATION_LOG.md` and the session notes in `architecturedoc.md`.
+
+**Team:** Vivan Shah (product, testing and evaluation) and Maximilian von Maillot de la Treille (problem research and competition). ESADE, *Launching AI Native Ventures*, 2026.
